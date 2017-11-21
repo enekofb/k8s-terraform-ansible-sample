@@ -14,9 +14,9 @@ See the companion article https://opencredo.com/kubernetes-aws-terraform-ansible
 
 *This is a learning tool, not a production-ready setup.*
 
-## Requirements
+## Requirements and Versions
 
-Requirements on control machine:
+*Requirements on control machine:*
 
 - Terraform (tested with Terraform 0.7.0; **NOT compatible with Terraform 0.6.x**)
 - Python (tested with Python 2.7.12, may be not compatible with older versions; requires Jinja2 2.8)
@@ -26,6 +26,18 @@ Requirements on control machine:
 - Kubernetes CLI
 - SSH Agent
 - (optionally) AWS CLI
+
+*Components and version used for this tutorial:* 
+
+- Kubernetes 1.6.1
+- Docker 1.12.6
+- etcd 3.1.4
+- [CNI Based Networking](https://github.com/containernetworking/cni)
+- Secure communication between all components (etcd, control plane, workers)
+- Default Service Account and Secrets
+- [RBAC authorization enabled](https://kubernetes.io/docs/admin/authorization)
+- [TLS client certificate bootstrapping for kubelets](https://kubernetes.io/docs/admin/kubelet-tls-bootstrapping)
+- DNS add-on
 
 
 ## AWS Credentials
