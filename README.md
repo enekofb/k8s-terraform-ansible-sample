@@ -18,7 +18,7 @@ See the companion article https://opencredo.com/kubernetes-aws-terraform-ansible
 
 *Requirements on control machine:*
 
-- Terraform (tested with Terraform 0.7.0; **NOT compatible with Terraform 0.6.x**)
+- Terraform (tested with Terraform v0.10.6)
 - Python (tested with Python 2.7.12, may be not compatible with older versions; requires Jinja2 2.8)
 - Python *netaddr* module
 - Ansible (tested with Ansible 2.1.0.0)

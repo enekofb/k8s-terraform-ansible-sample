@@ -58,3 +58,4 @@ Temporary Items
 ### Ansible ###
 *.retry
 
+.idea/
