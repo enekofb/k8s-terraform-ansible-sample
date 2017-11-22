@@ -43,13 +43,26 @@ variable zone {
 ### VARIABLES BELOW MUST NOT BE CHANGED ###
 
 variable vpc_cidr {
-  default = "10.43.0.0/16"
+  default = "10.0.0.0/16"
 }
+
+variable subnet_public_cidr {
+  default = "10.0.10.0/24"
+}
+
+variable subnet_private_cidr {
+  default = "10.0.20.0/24"
+}
+
 
 variable kubernetes_pod_cidr {
   default = "10.200.0.0/16"
 }
 
+
+variable route53_zone_id {
+  default = "10.200.0.0/16"
+}
 
 # Instances Setup
 variable amis {
@@ -72,16 +85,21 @@ variable default_instance_user {
 }
 
 variable etcd_instance_type {
-  default = "t2.small"
+  default = "t2.micro"
 }
-variable controller_instance_type {
-  default = "t2.small"
+variable master_instance_type {
+  default = "t2.micro"
 }
 variable worker_instance_type {
-  default = "t2.small"
+  default = "t2.micro"
 }
 
+variable "bastion_instance_type" {
+  default = "t2.micro"
+}
 
 variable kubernetes_cluster_dns {
   default = "10.31.0.1"
 }
+
+

@@ -43,9 +43,9 @@ resource "aws_key_pair" "default_keypair" {
 ############
 
 # Subnet (public)
-resource "aws_subnet" "kubernetes" {
+resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.kubernetes.id}"
-  cidr_block = "${var.vpc_cidr}"
+  cidr_block = "${var.subnet_public_cidr}"
   availability_zone = "${var.zone}"
 
   tags {
@@ -54,25 +54,55 @@ resource "aws_subnet" "kubernetes" {
   }
 }
 
-resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.kubernetes.id}"
+# Subnet (private)
+resource "aws_subnet" "private" {
+  vpc_id     = "${aws_vpc.kubernetes.id}"
+  cidr_block = "${var.subnet_private_cidr}"
+  availability_zone = "${var.zone}"
+
   tags {
     Name = "kubernetes"
     Owner = "${var.owner}"
   }
 }
 
+
+resource "aws_internet_gateway" "igw" {
+  vpc_id = "${aws_vpc.kubernetes.id}"
+  tags {
+    Name = "Internet Gateway"
+    Owner = "${var.owner}"
+  }
+}
+
+resource "aws_eip" "ngw-eip" {
+  vpc      = true
+
+}
+
+
+resource "aws_nat_gateway" "ngw" {
+  allocation_id = "${aws_eip.ngw-eip.id}"
+  subnet_id     = "${aws_subnet.private.id}"
+
+  tags {
+    Name = "Nat Gateway"
+    Owner = "${var.owner}"
+  }
+
+}
+
 ############
 ## Routing
 ############
 
-resource "aws_route_table" "kubernetes" {
+resource "aws_route_table" "public" {
     vpc_id = "${aws_vpc.kubernetes.id}"
 
     # Default route through Internet Gateway
     route {
       cidr_block = "0.0.0.0/0"
-      gateway_id = "${aws_internet_gateway.gw.id}"
+      gateway_id = "${aws_internet_gateway.igw.id}"
     }
 
     tags {
@@ -81,62 +111,91 @@ resource "aws_route_table" "kubernetes" {
     }
 }
 
-resource "aws_route_table_association" "kubernetes" {
-  subnet_id = "${aws_subnet.kubernetes.id}"
-  route_table_id = "${aws_route_table.kubernetes.id}"
+resource "aws_route_table_association" "public" {
+  subnet_id = "${aws_subnet.public.id}"
+  route_table_id = "${aws_route_table.public.id}"
 }
 
 
-############
-## Security
-############
-
-resource "aws_security_group" "kubernetes" {
+resource "aws_route_table" "private" {
   vpc_id = "${aws_vpc.kubernetes.id}"
-  name = "kubernetes"
 
-  # Allow all outbound
+  # Default route through Nat Gateway
+  route {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = "${aws_nat_gateway.ngw.id}"
+  }
+
+  tags {
+    Name = "kubernetes"
+    Owner = "${var.owner}"
+  }
+}
+
+resource "aws_route_table_association" "private" {
+  subnet_id = "${aws_subnet.private.id}"
+  route_table_id = "${aws_route_table.private.id}"
+}
+
+
+###########
+## Bastion
+###########
+
+resource "aws_instance" "bastion" {
+  count = 1
+  ami = "${lookup(var.amis, var.region)}"
+  instance_type = "${var.bastion_instance_type}"
+
+  subnet_id = "${aws_subnet.public.id}"
+  private_ip = "${cidrhost(var.subnet_public_cidr, 40 + count.index)}"
+
+
+  availability_zone = "${var.zone}"
+  vpc_security_group_ids = ["${aws_security_group.bastion-sg.id}"]
+  key_name = "${var.default_keypair_name}"
+
+  tags {
+    Owner = "${var.owner}"
+    Name = "bastion"
+    ansibleFilter = "${var.ansibleFilter}"
+    ansibleNodeType = "worker"
+    ansibleNodeName = "worker${count.index}"
+  }
+}
+
+resource "aws_eip" "bastion-eip" {
+  vpc      = true
+
+}
+
+resource "aws_eip_association" "eip_assoc" {
+  instance_id   = "${aws_instance.bastion.id}"
+  allocation_id = "${aws_eip.bastion-eip.id}"
+}
+
+resource "aws_security_group" "bastion-sg" {
+  vpc_id = "${aws_vpc.kubernetes.id}"
+  name = "bastion-sg"
+
+  # Allow inbound traffic to the port used by Kubernetes API HTTPS
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "TCP"
+    cidr_blocks = ["${var.control_cidr}"]
+  }
+
+  # Allow inbound traffic to the port used by Kubernetes API HTTPS
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # Allow ICMP from control host IP
-  ingress {
-    from_port = 8
-    to_port = 0
-    protocol = "icmp"
-    cidr_blocks = ["${var.control_cidr}"]
-  }
-
-  # Allow all internal
-  ingress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port = 22
+    to_port = 22
+    protocol = "TCP"
     cidr_blocks = ["${var.vpc_cidr}"]
-  }
-
-  # Allow all traffic from the API ELB
-  ingress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    security_groups = ["${aws_security_group.kubernetes_api.id}"]
-  }
-
-  # Allow all traffic from control host IP
-  ingress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["${var.control_cidr}"]
   }
 
   tags {
     Owner = "${var.owner}"
-    Name = "kubernetes"
+    Name = "bastion-sg"
   }
 }

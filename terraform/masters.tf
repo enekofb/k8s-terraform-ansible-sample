@@ -1,30 +1,29 @@
 ############################
-# K8s Control Pane instances
+# K8s Master instances
 ############################
 
-resource "aws_instance" "controller" {
+resource "aws_instance" "master" {
 
     count = 3
     ami = "${lookup(var.amis, var.region)}"
-    instance_type = "${var.controller_instance_type}"
+    instance_type = "${var.master_instance_type}"
 
     iam_instance_profile = "${aws_iam_instance_profile.kubernetes.id}"
 
-    subnet_id = "${aws_subnet.kubernetes.id}"
-    private_ip = "${cidrhost(var.vpc_cidr, 20 + count.index)}"
-    associate_public_ip_address = true # Instances have public, dynamic IP
-    source_dest_check = false # TODO Required??
+    subnet_id = "${aws_subnet.private.id}"
+    private_ip = "${cidrhost(var.subnet_private_cidr, 20 + count.index)}"
+    associate_public_ip_address = false # Instances have public, dynamic IP
 
     availability_zone = "${var.zone}"
-    vpc_security_group_ids = ["${aws_security_group.kubernetes.id}"]
+    vpc_security_group_ids = ["${aws_security_group.master-sg.id}"]
     key_name = "${var.default_keypair_name}"
 
     tags {
       Owner = "${var.owner}"
-      Name = "controller-${count.index}"
+      Name = "master-${count.index}"
       ansibleFilter = "${var.ansibleFilter}"
-      ansibleNodeType = "controller"
-      ansibleNodeName = "controller${count.index}"
+      ansibleNodeType = "master"
+      ansibleNodeName = "master${count.index}"
     }
 }
 
@@ -32,13 +31,13 @@ resource "aws_instance" "controller" {
 ## Kubernetes API Load Balancer
 ###############################
 
-resource "aws_elb" "kubernetes_api" {
+resource "aws_elb" "master-elb" {
     name = "${var.elb_name}"
-    instances = ["${aws_instance.controller.*.id}"]
-    subnets = ["${aws_subnet.kubernetes.id}"]
+    instances = ["${aws_instance.master.*.id}"]
+    subnets = ["${aws_subnet.public.id}"]
     cross_zone_load_balancing = false
 
-    security_groups = ["${aws_security_group.kubernetes_api.id}"]
+    security_groups = ["${aws_security_group.master-elb-sg.id}"]
 
     listener {
       lb_port = 6443
@@ -56,18 +55,15 @@ resource "aws_elb" "kubernetes_api" {
     }
 
     tags {
-      Name = "kubernetes"
+      Name = "master-elb"
       Owner = "${var.owner}"
     }
 }
 
-############
-## Security
-############
+resource "aws_security_group" "master-elb-sg" {
 
-resource "aws_security_group" "kubernetes_api" {
   vpc_id = "${aws_vpc.kubernetes.id}"
-  name = "kubernetes-api"
+  name = "master-elb-sg"
 
   # Allow inbound traffic to the port used by Kubernetes API HTTPS
   ingress {
@@ -77,24 +73,59 @@ resource "aws_security_group" "kubernetes_api" {
     cidr_blocks = ["${var.control_cidr}"]
   }
 
+  egress {
+    from_port = 6443
+    to_port = 6443
+    protocol = "TCP"
+    cidr_blocks = ["${var.subnet_private_cidr}"]
+  }
+
+}
+
+
+############
+## Security
+############
+
+resource "aws_security_group" "master-sg" {
+  vpc_id = "${aws_vpc.kubernetes.id}"
+  name = "master-sg"
+
+  # Allow inbound traffic to the port used by Kubernetes API HTTPS
+  ingress {
+    from_port = 6443
+    to_port = 6443
+    protocol = "TCP"
+    cidr_blocks = ["${var.vpc_cidr}"]
+  }
+
+  # Allow inbound traffic to the port used by Kubernetes API HTTPS
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "TCP"
+    cidr_blocks = ["${var.vpc_cidr}"]
+  }
+
   # Allow all outbound traffic
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  egress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  //TODO add rest of the ports
+
   tags {
     Owner = "${var.owner}"
-    Name = "kubernetes-api"
+    Name = "master-sg"
   }
-}
-
-############
-## Outputs
-############
-
-output "kubernetes_api_dns_name" {
-  value = "${aws_elb.kubernetes_api.dns_name}"
 }

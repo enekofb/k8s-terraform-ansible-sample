@@ -7,12 +7,10 @@ resource "aws_instance" "etcd" {
     ami = "${lookup(var.amis, var.region)}"
     instance_type = "${var.etcd_instance_type}"
 
-    subnet_id = "${aws_subnet.kubernetes.id}"
-    private_ip = "${cidrhost(var.vpc_cidr, 10 + count.index)}"
-    associate_public_ip_address = true # Instances have public, dynamic IP
-
+    subnet_id = "${aws_subnet.private.id}"
+    private_ip = "${cidrhost(var.subnet_private_cidr, 10 + count.index)}"
     availability_zone = "${var.zone}"
-    vpc_security_group_ids = ["${aws_security_group.kubernetes.id}"]
+    vpc_security_group_ids = ["${aws_security_group.etcd-sg.id}"]
     key_name = "${var.default_keypair_name}"
 
     tags {
@@ -23,3 +21,54 @@ resource "aws_instance" "etcd" {
       ansibleNodeName = "etcd${count.index}"
     }
 }
+
+resource "aws_security_group" "etcd-sg" {
+  vpc_id = "${aws_vpc.kubernetes.id}"
+  name = "etcd-sg"
+
+  # Allow inbound traffic to the port used by Kubernetes API HTTPS
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "TCP"
+    cidr_blocks = ["${var.control_cidr}"]
+  }
+
+
+  # Allow inbound traffic to the port used by Kubernetes API HTTPS
+  ingress {
+    from_port = 2379
+    to_port = 2379
+    protocol = "TCP"
+    cidr_blocks = ["${var.vpc_cidr}"]
+  }
+
+//  ingress {
+//    from_port = 2379
+//    to_port = 2379
+//    protocol = "TCP"
+//    self = true
+//  }
+
+  ingress {
+    from_port = 2380
+    to_port = 2380
+    protocol = "TCP"
+    self = true
+  }
+
+
+  egress {
+    from_port = 2380
+    to_port = 2380
+    protocol = "TCP"
+    self = true
+  }
+
+
+  tags {
+    Owner = "${var.owner}"
+    Name = "etcd-sg"
+  }
+}
+
