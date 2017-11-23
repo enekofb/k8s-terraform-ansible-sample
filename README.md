@@ -135,6 +135,47 @@ e.g.
 $ ssh -F ssh.cfg worker0
 ```
 
+## Setting up a Certificate Authority and Creating TLS Certificates
+
+[Extracted from] (https://github.com/enekofb/kubernetes-the-hard-way/blob/master/docs/04-certificate-authority.md)
+
+This lab requires the `cfssl` and `cfssljson` binaries. Download them from the [cfssl repository](https://pkg.cfssl.org).
+
+### Install CFSSL (for Mac Osx)
+
+```
+wget https://pkg.cfssl.org/R1.2/cfssl_darwin-amd64
+chmod +x cfssl_darwin-amd64
+sudo mv cfssl_darwin-amd64 /usr/local/bin/cfssl
+```
+
+```
+wget https://pkg.cfssl.org/R1.2/cfssljson_darwin-amd64
+chmod +x cfssljson_darwin-amd64
+sudo mv cfssljson_darwin-amd64 /usr/local/bin/cfssljson
+```
+
+### Set up a Certificate Authority
+
+- both CA configuration file and CA certificate signinig request could be found
+at folder $k8s-terraform-ansible-sample/cert 
+
+
+### Generate CA certificate and CA private key
+
+```
+cd $k8s-terraform-ansible-sample/cert
+cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+```
+
+Results:
+
+```
+ca-key.pem
+ca.pem
+```
+
+
 ## Install Kubernetes, with Ansible
 
 Run Ansible commands from `./ansible` subdirectory.
