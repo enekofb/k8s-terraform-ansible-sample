@@ -40,7 +40,12 @@
     - kubectl
   become: true
 
-- name: Copy Authentication and Authorisation files
+- name: Copy Authentication files
+  template:
+    src: token.csv.j2
+    dest: /var/lib/kubernetes/token.csv.j2
+
+- name: Copy Authorisation files
   copy:
     src: "{{ item }}"
     dest: /var/lib/kubernetes
@@ -48,7 +53,6 @@
     group: root
     mode: 0644
   with_items:
-    - token.csv
     - authorization-policy.jsonl
   become: true
 

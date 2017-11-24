@@ -3,7 +3,7 @@
 #########################
 
 resource "aws_instance" "etcd" {
-    count = 3
+    count = 1
     ami = "${lookup(var.amis, var.region)}"
     instance_type = "${var.etcd_instance_type}"
 

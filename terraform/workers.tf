@@ -4,7 +4,7 @@
 ############################################
 
 resource "aws_instance" "worker" {
-    count = 3
+    count = 1
     ami = "${lookup(var.amis, var.region)}"
     instance_type = "${var.worker_instance_type}"
 

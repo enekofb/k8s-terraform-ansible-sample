@@ -1,0 +1,28 @@
+---
+- name: Check certificate file
+  stat:
+    path: "{{ certificate_path }}/ca.pem"
+  register: cert
+
+- assert:
+    that: "cert.stat.exists == True"
+
+- name: Set kubectl endpoint
+  shell: "kubectl config set-cluster {{ kubernetes_cluster_name }} \
+          --certificate-authority={{ certificate_path }}/ca.pem \
+          --embed-certs=true \
+          --server=https://{{ kubernetes_api_endpoint }}:{{ kubernetes_api_endpoint_port }}
+          --kubeconfig=bootstrap.kubeconfig"
+
+- name: Set kubectl credentials
+  shell: "kubectl config set-credentials {{ kubectl_user }} \
+          --token {{ bootstrap_token }} \
+          --kubeconfig=bootstrap.kubeconfig"
+
+- name: Set kubectl default context
+  shell: "kubectl config set-context default-context \
+         --cluster={{ kubernetes_cluster_name }} \
+         --user=kubelet-bootstrap"
+
+- name: Switch kubectl to default context
+  shell: "kubectl config use-context default-context --kubeconfig=bootstrap.kubeconfig"

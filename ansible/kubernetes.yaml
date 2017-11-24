@@ -3,6 +3,12 @@
 # Install Python
 #####################
 
+- hosts: localhost
+  connection: local
+  roles:
+   - bootstrap
+
+
 - hosts: all
   gather_facts: false # As Python is not yet installed, we cannot gather host facts
 
@@ -18,17 +24,17 @@
 # Setup K8s components
 #######################
 
-- hosts: etcd
+- hosts: etcds
   roles:
     - common
     - etcd
 
-- hosts: controller
+- hosts: masters
   roles:
     - common
-    - controller
+    - masters
 
-- hosts: worker
+- hosts: workers
   roles:
     - common
     - worker

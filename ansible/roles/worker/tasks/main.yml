@@ -70,6 +70,8 @@
 # Kubelet
 ###########
 
+- include_tasks: kubelet-bootstrap.yaml
+
 - name: Create CNI dir
   file: path=/opt/cni state=directory
   become: true
@@ -128,6 +130,8 @@
 #############
 # Kube-proxy
 #############
+
+- include_tasks: kubeproxy-bootstrap.yaml
 
 - name: Add kube-proxy systemd unit
   template:

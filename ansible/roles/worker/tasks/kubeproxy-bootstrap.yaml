@@ -1,0 +1,31 @@
+---
+- name: Check certificate file
+  stat:
+    path: "{{ certificate_path }}/ca.pem"
+  register: cert
+
+- assert:
+    that: "cert.stat.exists == True"
+
+- name: Set kubectl endpoint
+  shell: "kubectl config set-cluster {{ kubernetes_cluster_name }} \
+          --certificate-authority={{ certificate_path }}/ca.pem \
+          --embed-certs=true \
+          --server=https://{{ kubernetes_api_endpoint }}:{{ kubernetes_api_endpoint_port }}
+          --kubeconfig=kube-proxy.kubeconfig"
+
+- name: Set kubectl credentials
+  shell: "kubectl config set-credentials kube-proxy \
+          --client-certificate={{ certificate_path }}/kubernetes/kubernetes.pem \
+          --client-key={{ certificate_path }}/kubernetes/kubernetes-key.pem \
+          --embed-certs=true \
+          --kubeconfig=kube-proxy.kubeconfig"
+
+- name: Set kubectl default context
+  shell: "kubectl config set-context default \
+         --cluster={{ kubernetes_cluster_name }} \
+         --user=kube-proxy \
+         --kubeconfig=kube-proxy.kubeconfig"
+
+- name: Switch kubectl to default context
+  shell: "kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig"
