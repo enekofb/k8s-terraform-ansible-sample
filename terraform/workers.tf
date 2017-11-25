@@ -10,7 +10,7 @@ resource "aws_instance" "worker" {
 
     subnet_id = "${aws_subnet.private.id}"
     private_ip = "${cidrhost(var.subnet_private_cidr, 30 + count.index)}"
-
+    associate_public_ip_address = false
     availability_zone = "${var.zone}"
     vpc_security_group_ids = ["${aws_security_group.worker-sg.id}"]
     key_name = "${var.default_keypair_name}"

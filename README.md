@@ -186,7 +186,7 @@ We have multiple playbooks.
 
 Install Kubernetes components and *etcd* cluster.
 ```
-$ ansible-playbook infra.yaml
+$ ansible-playbook kubernetes.yaml
 ```
 
 ### Setup Kubernetes CLI

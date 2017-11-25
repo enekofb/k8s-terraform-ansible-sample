@@ -49,7 +49,7 @@ resource "aws_subnet" "public" {
   availability_zone = "${var.zone}"
 
   tags {
-    Name = "kubernetes"
+    Name = "kubernetes-public"
     Owner = "${var.owner}"
   }
 }
@@ -61,7 +61,7 @@ resource "aws_subnet" "private" {
   availability_zone = "${var.zone}"
 
   tags {
-    Name = "kubernetes"
+    Name = "kubernetes-private"
     Owner = "${var.owner}"
   }
 }
@@ -83,7 +83,7 @@ resource "aws_eip" "ngw-eip" {
 
 resource "aws_nat_gateway" "ngw" {
   allocation_id = "${aws_eip.ngw-eip.id}"
-  subnet_id     = "${aws_subnet.private.id}"
+  subnet_id     = "${aws_subnet.public.id}"
 
   tags {
     Name = "Nat Gateway"
@@ -150,6 +150,7 @@ resource "aws_instance" "bastion" {
   subnet_id = "${aws_subnet.public.id}"
   private_ip = "${cidrhost(var.subnet_public_cidr, 40 + count.index)}"
 
+  key_name = "${var.default_keypair_name}"
 
   availability_zone = "${var.zone}"
   vpc_security_group_ids = ["${aws_security_group.bastion-sg.id}"]
@@ -159,8 +160,8 @@ resource "aws_instance" "bastion" {
     Owner = "${var.owner}"
     Name = "bastion"
     ansibleFilter = "${var.ansibleFilter}"
-    ansibleNodeType = "worker"
-    ansibleNodeName = "worker${count.index}"
+    ansibleNodeType = "bastion"
+    ansibleNodeName = "bastion"
   }
 }
 
@@ -192,6 +193,20 @@ resource "aws_security_group" "bastion-sg" {
     to_port = 22
     protocol = "TCP"
     cidr_blocks = ["${var.vpc_cidr}"]
+  }
+
+  egress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags {

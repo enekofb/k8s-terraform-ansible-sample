@@ -9,9 +9,11 @@ resource "aws_instance" "etcd" {
 
     subnet_id = "${aws_subnet.private.id}"
     private_ip = "${cidrhost(var.subnet_private_cidr, 10 + count.index)}"
+    associate_public_ip_address = false
     availability_zone = "${var.zone}"
     vpc_security_group_ids = ["${aws_security_group.etcd-sg.id}"]
     key_name = "${var.default_keypair_name}"
+
 
     tags {
       Owner = "${var.owner}"
@@ -65,6 +67,19 @@ resource "aws_security_group" "etcd-sg" {
     self = true
   }
 
+  egress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   tags {
     Owner = "${var.owner}"

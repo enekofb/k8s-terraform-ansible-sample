@@ -13,9 +13,9 @@
     mode: 0644
   become: true
   with_items:
-    - ca.pem
-    - kubernetes.pem
-    - kubernetes-key.pem
+    - ca/ca.pem
+    - kubernetes/kubernetes.pem
+    - kubernetes/kubernetes-key.pem
 
 - name: Download etcd binaries
   get_url:

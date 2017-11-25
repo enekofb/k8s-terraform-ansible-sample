@@ -11,30 +11,34 @@
 
 - hosts: all
   gather_facts: false # As Python is not yet installed, we cannot gather host facts
-
   tasks:
-    - name: Install Python
-      raw: "apt-get -y -q install python"
+    - name: Apt update
+      raw: "apt-get update"
       become: true
       retries: 10
       delay: 20
-      # If you run this playbook immediately after Terraform, ssh may not be ready to respond yet
+
+    - name: Install Python
+      raw: "apt-get install -y python"
+      become: true
+      retries: 10
+      delay: 20
 
 #######################
 # Setup K8s components
 #######################
 
-- hosts: etcds
-  roles:
-    - common
-    - etcd
+#- hosts: etcds
+#  roles:
+#    - common
+#    - etcd
 
-- hosts: masters
-  roles:
-    - common
-    - masters
+#- hosts: masters
+#  roles:
+#    - common
+#    - masters
 
-- hosts: workers
-  roles:
-    - common
-    - worker
+#- hosts: workers
+#  roles:
+#    - common
+#    - worker

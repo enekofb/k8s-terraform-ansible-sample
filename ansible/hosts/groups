@@ -4,11 +4,11 @@
 
 [tag_ansibleNodeType_controller]
 
-[etcd:children]
+[etcds:children]
 tag_ansibleNodeType_etcd
 
-[worker:children]
+[workers:children]
 tag_ansibleNodeType_worker
 
-[controller:children]
+[masters:children]
 tag_ansibleNodeType_controller

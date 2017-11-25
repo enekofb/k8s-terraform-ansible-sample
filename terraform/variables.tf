@@ -28,7 +28,7 @@ variable owner {
 
 variable ansibleFilter {
   description = "`ansibleFilter` tag value added to all instances, to enable instance filtering in Ansible dynamic inventory"
-  default = "Kubernetes01" # IF YOU CHANGE THIS YOU HAVE TO CHANGE instance_filters = tag:ansibleFilter=Kubernetes01 in ./ansible/hosts/ec2.ini
+  default = "Kubernetes" # IF YOU CHANGE THIS YOU HAVE TO CHANGE instance_filters = tag:ansibleFilter=Kubernetes01 in ./ansible/hosts/ec2.ini
 }
 
 # Networking setup
