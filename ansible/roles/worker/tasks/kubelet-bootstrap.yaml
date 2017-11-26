@@ -15,7 +15,7 @@
           --kubeconfig=bootstrap.kubeconfig"
 
 - name: Set kubectl credentials
-  shell: "kubectl config set-credentials {{ kubectl_user }} \
+  shell: "kubectl config set-credentials system:node:{{ kubectl_user }} \
           --token {{ bootstrap_token }} \
           --kubeconfig=bootstrap.kubeconfig"
 

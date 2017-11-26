@@ -8,6 +8,8 @@ cni_download_url: "https://storage.googleapis.com/kubernetes-release/network-plu
 kubernetes_version: "v1.6.1"
 kubelet_download_path: "https://storage.googleapis.com/kubernetes-release/release/{{ kubernetes_version }}/bin/linux/amd64"
 
+kubernetes_api_endpoint: "cka-elb-1552897094.eu-west-1.elb.amazonaws.com"
 kubernetes_api_endpoint_port: 6443
 kubernetes_cluster_name: "kubernetes-not-the-hardest-way"
-certificate_path: "{{ playbook_dir }}/../cert"
+certificate_path: "/var/lib/kubernetes"
+kubectl_user: "worker"

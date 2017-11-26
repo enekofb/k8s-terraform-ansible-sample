@@ -32,7 +32,7 @@
     - common
     - master
 
-#- hosts: workers
-#  roles:
-#    - common
-#    - worker
+- hosts: workers
+  roles:
+    - common
+    - worker
