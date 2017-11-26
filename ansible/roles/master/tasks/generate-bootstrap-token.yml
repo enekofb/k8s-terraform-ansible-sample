@@ -1,14 +1,10 @@
 ---
 
-####################
-# Load Certificates
-####################
-
 - name: Create kubernetes bootstrap token
   command: bash -c "head -c 16 /dev/urandom | od -An -t x | tr -d ' '"
   register: token_result
 
-- debug: var=token_result.stdout
-
 - set_fact:
-  bootstrap_token: "{{ token_result.stdout}}"
+    bootstrap_token: "{{ token_result.stdout }}"
+
+- debug: var=bootstrap_token

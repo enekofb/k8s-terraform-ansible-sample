@@ -11,4 +11,4 @@ tag_ansibleNodeType_etcd
 tag_ansibleNodeType_worker
 
 [masters:children]
-tag_ansibleNodeType_controller
+tag_ansibleNodeType_master

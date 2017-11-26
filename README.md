@@ -287,4 +287,6 @@ There are many known simplifications, compared to a production-ready solution:
 
 - add vpc endpoints for services
 - revisit iam policy document
+- there is coupling between roles: for instance, i cannot provision masters if i havent
+set facts from etcds. however using inventory properties could be enough for the purporse of the task. 
 

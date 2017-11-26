@@ -113,13 +113,20 @@ resource "aws_security_group" "master-sg" {
     cidr_blocks = ["${var.vpc_cidr}"]
   }
 
-  # Allow all outbound traffic
+  egress {
+    from_port = 2379
+    to_port = 2379
+    protocol = "tcp"
+    cidr_blocks = ["${var.vpc_cidr}"]
+  }
+
   egress {
     from_port = 443
     to_port = 443
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
 
   egress {
     from_port = 80
