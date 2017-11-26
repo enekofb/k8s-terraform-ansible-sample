@@ -25,6 +25,11 @@ resource "aws_instance" "worker" {
       ansibleNodeType = "worker"
       ansibleNodeName = "worker${count.index}"
     }
+
+    lifecycle {
+      ignore_changes = ["user_data"]
+    }
+
 }
 
 output "kubernetes_workers_public_ip" {

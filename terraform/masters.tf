@@ -19,13 +19,18 @@ resource "aws_instance" "master" {
     iam_instance_profile = "${var.instance_profile_id}"
     user_data            = "${module.etcd_bootstrap.cloud_init_config}"
 
-  tags {
-      Owner = "${var.owner}"
-      Name = "master-${count.index}"
-      ansibleFilter = "${var.ansibleFilter}"
-      ansibleNodeType = "master"
-      ansibleNodeName = "master${count.index}"
+    tags {
+        Owner = "${var.owner}"
+        Name = "master-${count.index}"
+        ansibleFilter = "${var.ansibleFilter}"
+        ansibleNodeType = "master"
+        ansibleNodeName = "master${count.index}"
+      }
+
+    lifecycle {
+      ignore_changes = ["user_data"]
     }
+
 }
 
 ###############################

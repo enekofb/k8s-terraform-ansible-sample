@@ -26,9 +26,9 @@ resource "aws_instance" "etcd" {
     }
 
 
-//    lifecycle {
-//      ignore_changes = ["user_data"]
-//    }
+    lifecycle {
+      ignore_changes = ["user_data"]
+    }
 
 }
 
