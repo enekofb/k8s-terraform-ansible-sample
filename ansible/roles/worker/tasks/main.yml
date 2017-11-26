@@ -16,9 +16,9 @@
     group: root
     mode: 0644
   with_items:
-    - ca.pem
-    - kubernetes.pem
-    - kubernetes-key.pem
+    - ca/ca.pem
+    - kubernetes/kubernetes.pem
+    - kubernetes/kubernetes-key.pem
   become: true
 
 #########

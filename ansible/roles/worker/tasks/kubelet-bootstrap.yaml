@@ -1,11 +1,11 @@
 ---
-- name: Check certificate file
-  stat:
-    path: "{{ certificate_path }}/ca.pem"
-  register: cert
-
-- assert:
-    that: "cert.stat.exists == True"
+#- name: Check certificate file
+#  stat:
+#    path: "{{ certificate_path }}/ca.pem"
+#  register: cert
+#
+#- assert:
+#    that: "cert.stat.exists == True"
 
 - name: Set kubectl endpoint
   shell: "kubectl config set-cluster {{ kubernetes_cluster_name }} \
