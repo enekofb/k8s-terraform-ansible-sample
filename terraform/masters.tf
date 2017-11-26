@@ -8,8 +8,6 @@ resource "aws_instance" "master" {
     ami = "${lookup(var.amis, var.region)}"
     instance_type = "${var.master_instance_type}"
 
-    iam_instance_profile = "${aws_iam_instance_profile.kubernetes.id}"
-
     subnet_id = "${aws_subnet.private.id}"
     private_ip = "${cidrhost(var.subnet_private_cidr, 20 + count.index)}"
     associate_public_ip_address = false # Instances have public, dynamic IP
@@ -18,7 +16,10 @@ resource "aws_instance" "master" {
     vpc_security_group_ids = ["${aws_security_group.master-sg.id}"]
     key_name = "${var.default_keypair_name}"
 
-    tags {
+    iam_instance_profile = "${var.instance_profile_id}"
+    user_data            = "${module.etcd_bootstrap.cloud_init_config}"
+
+  tags {
       Owner = "${var.owner}"
       Name = "master-${count.index}"
       ansibleFilter = "${var.ansibleFilter}"

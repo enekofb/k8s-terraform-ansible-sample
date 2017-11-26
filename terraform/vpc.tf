@@ -150,8 +150,6 @@ resource "aws_instance" "bastion" {
   subnet_id = "${aws_subnet.public.id}"
   private_ip = "${cidrhost(var.subnet_public_cidr, 40 + count.index)}"
 
-  key_name = "${var.default_keypair_name}"
-
   availability_zone = "${var.zone}"
   vpc_security_group_ids = ["${aws_security_group.bastion-sg.id}"]
   key_name = "${var.default_keypair_name}"

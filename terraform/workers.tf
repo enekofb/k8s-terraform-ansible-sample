@@ -15,6 +15,9 @@ resource "aws_instance" "worker" {
     vpc_security_group_ids = ["${aws_security_group.worker-sg.id}"]
     key_name = "${var.default_keypair_name}"
 
+    iam_instance_profile = "${var.instance_profile_id}"
+    user_data            = "${module.etcd_bootstrap.cloud_init_config}"
+
     tags {
       Owner = "${var.owner}"
       Name = "worker-${count.index}"
@@ -27,7 +30,6 @@ resource "aws_instance" "worker" {
 output "kubernetes_workers_public_ip" {
   value = "${join(",", aws_instance.worker.*.public_ip)}"
 }
-
 
 resource "aws_security_group" "worker-sg" {
   vpc_id = "${aws_vpc.kubernetes.id}"

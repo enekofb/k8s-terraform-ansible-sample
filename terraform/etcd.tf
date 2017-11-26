@@ -14,6 +14,8 @@ resource "aws_instance" "etcd" {
     vpc_security_group_ids = ["${aws_security_group.etcd-sg.id}"]
     key_name = "${var.default_keypair_name}"
 
+    iam_instance_profile = "${var.instance_profile_id}"
+    user_data            = "${module.etcd_bootstrap.cloud_init_config}"
 
     tags {
       Owner = "${var.owner}"
@@ -22,7 +24,21 @@ resource "aws_instance" "etcd" {
       ansibleNodeType = "etcd"
       ansibleNodeName = "etcd${count.index}"
     }
+
+
+//    lifecycle {
+//      ignore_changes = ["user_data"]
+//    }
+
 }
+
+module "etcd_bootstrap" {
+  source              = "/Users/eneko/projects/enekofb/terraform-module-bootstrap/ssh_bootstrap"
+
+  ssh_ca_publickey      = "${var.ssh_ca_publickey}"
+  github_ssh_privatekey = "${var.github_ssh_privatekey}"
+}
+
 
 resource "aws_security_group" "etcd-sg" {
   vpc_id = "${aws_vpc.kubernetes.id}"

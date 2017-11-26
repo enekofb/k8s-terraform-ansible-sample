@@ -102,4 +102,17 @@ variable kubernetes_cluster_dns {
   default = "10.31.0.1"
 }
 
+variable "this_repo" {
+  default = "git@github.com:enekofb/k8s-terraform-ansible-sample.git"
+}
+
+variable "instance_profile_id" {
+  default = "kubernetes"
+}
+
+
+variable "ssh_cluster_publickey" {}
+variable "github_ssh_privatekey" {}
+variable "ssh_ca_publickey" {}
+
 
