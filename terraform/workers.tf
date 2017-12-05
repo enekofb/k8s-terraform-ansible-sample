@@ -78,6 +78,14 @@ resource "aws_security_group" "worker-sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  egress {
+    from_port = 6443
+    to_port = 6443
+    protocol = "tcp"
+    cidr_blocks = ["${var.vpc_cidr}"]
+  }
+
+
   tags {
     Owner = "${var.owner}"
     Name = "worker-sg"

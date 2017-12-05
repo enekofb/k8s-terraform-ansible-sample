@@ -282,6 +282,7 @@ There are many known simplifications, compared to a production-ready solution:
 - Using certs signed by ca. 
 - Using bootstrap tookens.
 - Very basic Service Account and Secret (to change them, modify: `./ansible/roles/controller/files/token.csv` and `./ansible/roles/worker/templates/kubeconfig.j2`)
+- Using RBAC not ABAC
 
 # TODO
 
@@ -290,3 +291,13 @@ There are many known simplifications, compared to a production-ready solution:
 - there is coupling between roles: for instance, i cannot provision masters if i havent
 set facts from etcds. however using inventory properties could be enough for the purporse of the task. 
 - review docker version
+
+# notice from version 1.6
+
+Api server there is audit and RBAC ! 
+
+  --audit-log-maxage=30 \
+  --audit-log-maxbackup=3 \
+  --audit-log-maxsize=100 \
+  --audit-log-path=/var/lib/audit.log \
+  --authorization-mode=RBAC \  

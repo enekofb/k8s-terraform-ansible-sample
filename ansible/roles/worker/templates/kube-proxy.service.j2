@@ -6,7 +6,7 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 ExecStart=/usr/bin/kube-proxy \
   --cluster-cidr={{ kubernetes_pod_cluster_cidr }} \
   --masquerade-all=true \
-  --kubeconfig=/var/lib/kubelet/kubeconfig \
+  --kubeconfig=/var/lib/kubelet/kube-proxy.kubeconfig \
   --proxy-mode=iptables \
   --v=2
 

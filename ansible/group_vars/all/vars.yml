@@ -6,3 +6,6 @@ kubernetes_pod_cluster_cidr: "10.200.0.0/16"
 kubernetes_cluster_dns: "10.32.0.10"
 
 kubernetes_version: "v1.6.1"
+
+kubernetes_api_endpoint: "ip-10-0-20-20.eu-west-1.compute.internal"
+kubectl_user: admin
