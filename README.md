@@ -29,7 +29,7 @@ See the companion article https://opencredo.com/kubernetes-aws-terraform-ansible
 
 *Components and version used for this tutorial:* 
 
-- Kubernetes 1.6.1
+- Kubernetes 1.8.0
 - Docker 1.12.6
 - etcd 3.1.4
 - [CNI Based Networking](https://github.com/containernetworking/cni)
@@ -301,3 +301,11 @@ Api server there is audit and RBAC !
   --audit-log-maxsize=100 \
   --audit-log-path=/var/lib/audit.log \
   --authorization-mode=RBAC \  
+
+
+# More 
+
+needed to create this 
+
+kubectl create clusterrolebinding system-authenticated-cluster-admin-binding-kubelet --clusterrole=cluster-admin --group=system:kubelet-bootstrap
+clusterrolebinding "system-authenticated-cluster-admin-binding-kubelet" created

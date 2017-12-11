@@ -4,24 +4,25 @@
           --certificate-authority={{ certificate_path }}/ca.pem \
           --embed-certs=true \
           --server=https://{{ kubernetes_api_endpoint }}:{{ kubernetes_api_endpoint_port }}
-          --kubeconfig=/var/lib/kubelet/bootstrap.kubeconfig"
+          --kubeconfig=/var/lib/kubelet/kubeconfig"
   become: true
 
 - name: Set kubectl credentials
-  shell: "kubectl config set-credentials kubelet-bootstrap \
-          --token e6ffc61adfe129f0accae337add9645f \
-          --kubeconfig=/var/lib/kubelet/bootstrap.kubeconfig"
+  shell: "kubectl config set-credentials system:node:node01 \
+          --client-certificate={{ certificate_path }}/node01.pem \
+          --client-key={{ certificate_path }}/node01-key.pem \
+          --embed-certs=true \
+          --kubeconfig=/var/lib/kubelet/kubeconfig"
   become: true
 
 - name: Set kubectl default context
   shell: "kubectl config set-context default-context \
          --cluster={{ kubernetes_cluster_name }} \
-         --user=kubelet-bootstrap \
-         --kubeconfig=/var/lib/kubelet/bootstrap.kubeconfig"
+         --user=system:node:node01 \
+         --kubeconfig=/var/lib/kubelet/kubeconfig"
   become: true
-
 
 - name: Switch kubectl to default context
   shell: "kubectl config use-context default-context \
-         --kubeconfig=/var/lib/kubelet/bootstrap.kubeconfig"
+         --kubeconfig=/var/lib/kubelet/kubeconfig"
   become: true

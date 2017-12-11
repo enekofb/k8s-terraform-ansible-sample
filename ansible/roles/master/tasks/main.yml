@@ -16,8 +16,7 @@
     mode: 0644
   with_items:
     - ca.pem
-    - kubernetes.pem
-    - kubernetes-key.pem
+    - ca-key.pem
   become: true
 
 #############
@@ -90,19 +89,25 @@
     - kube-scheduler
   become: true
 
-#- name: Create role for allow kubelets to register
-#  shell: kubectl replace --force=true clusterrolebinding kubelet-bootstrap \
-#           --clusterrole=system:node-bootstrapper \
-#           --user=kubelet-bootstrap
+#- name: Verify Kubernetes status
+#  shell: kubectl get componentstatuses
+#  register: cmd_result
+#  retries: 5
+#  delay: 20
+#  become: true
 
-- name: Verify Kubernetes status
-  shell: kubectl get componentstatuses
-  register: cmd_result
-  retries: 5
-  delay: 10
+#- assert:
+#    that:
+#      - "'scheduler            Healthy' in cmd_result.stdout"
+#      - "'controller-manager   Healthy' in cmd_result.stdout"
+#      - "'etcd-0               Healthy' in cmd_result.stdout"
 
-- assert:
-    that:
-      - "'scheduler            Healthy' in cmd_result.stdout"
-      - "'controller-manager   Healthy' in cmd_result.stdout"
-      - "'etcd-0               Healthy' in cmd_result.stdout"
+- name: RBAC template
+  template:
+    src: rbac.yaml.j2
+    dest: /var/lib/kubernetes/rbac.yaml
+  become: true
+
+
+- name: Create RBAC kube-api-server-to-kubelet
+  shell: "kubectl apply -f /var/lib/kubernetes/rbac.yaml"

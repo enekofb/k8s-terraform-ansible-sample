@@ -17,10 +17,10 @@
     mode: 0644
   with_items:
     - ca.pem
-    - kubernetes.pem
-    - kubernetes-key.pem
     - kube-proxy.pem
     - kube-proxy-key.pem
+    - node01.pem
+    - node01-key.pem
   become: true
 
 #########
