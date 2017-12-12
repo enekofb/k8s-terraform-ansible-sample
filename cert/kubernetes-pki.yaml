@@ -1,0 +1,81 @@
+---
+###########################
+# Setup Kubernetes client
+###########################
+
+# Expects `kubernetes_api_endpoint` to be defined passed in
+# as `--extra-vars "kubernetes_api_endpoint=xxxx"`
+
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    kubernetes_api_endpoint_port: 6443
+    kubernetes_cluster_name: "kubernetes-not-the-hardest-way"
+    certificate_path: "/Users/eneko/projects/enekofb/k8s-terraform-ansible-sample/cert"
+
+  tasks:
+
+  - name: Check CA config exists
+    stat:
+      path: "{{ certificate_path }}/ca-config.json"
+    register: ca_config
+
+  - assert:
+      that: "ca_config.stat.exists == True"
+
+  - name: Check CA sign request file
+    stat:
+      path: "{{ certificate_path }}/ca-csr.json"
+    register: ca_csr
+
+  - assert:
+      that: "ca_csr.stat.exists == True"
+
+#  - name: Generate CA cert and CA private key
+#    command: bash -c "cfssl gencert -initca ca-csr.json | cfssljson -bare ca"
+
+
+  - name: Check Admin sign request file
+    stat:
+      path: "{{ certificate_path }}/admin-csr.json"
+    register: admin_csr
+
+  - assert:
+      that: "admin_csr.stat.exists == True"
+
+  - name: Generate Admin cert and Adminprivate key
+    command: bash -c "cfssl gencert -ca=ca.pem -ca-key=ca-key.pem  -config=ca-config.json -profile=kubernetes admin-csr.json | cfssljson -bare admin"
+
+  - name: Check Node01 sign request file
+    stat:
+      path: "{{ certificate_path }}/node01-csr.json"
+    register: node01_csr
+
+  - assert:
+      that: "node01_csr.stat.exists == True"
+
+  - name: Generate Node01 cert and key
+    command: bash -c "cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes node01-csr.json | cfssljson -bare node01"
+
+  - name: Check kube-proxy sign request file
+    stat:
+      path: "{{ certificate_path }}/kube-proxy-csr.json"
+    register: kube_proxy_csr
+
+  - assert:
+      that: "kube_proxy_csr.stat.exists == True"
+
+  - name: Generate kubeproxy cert and key
+    command: bash -c "cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes kube-proxy-csr.json | cfssljson -bare kube-proxy"
+
+  - name: Check kube-apiserver sign request file
+    stat:
+      path: "{{ certificate_path }}/kubernetes-csr.json"
+    register: kubernetes_csr
+
+  - assert:
+      that: "kubernetes_csr.stat.exists == True"
+
+  - name: Generate kubernetes apiserver cert and key
+    command: bash -c "cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes kubernetes-csr.json | cfssljson -bare kubernetes"
