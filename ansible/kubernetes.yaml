@@ -22,15 +22,15 @@
 # Setup K8s components
 #######################
 
-#- hosts: etcds
-#  roles:
-#    - common
-#    - etcd
+- hosts: etcds
+  roles:
+    - common
+    - etcd
 
-#- hosts: masters
-#  roles:
-#    - common
-#    - master
+- hosts: masters
+  roles:
+    - common
+    - master
 
 - hosts: workers
   roles:

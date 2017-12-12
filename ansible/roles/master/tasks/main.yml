@@ -40,12 +40,6 @@
     - kubectl
   become: true
 
-- name: Copy Authentication files
-  template:
-    src: token.csv.j2
-    dest: /var/lib/kubernetes/token.csv
-  become: true
-
 - name: Copy Authorisation files
   copy:
     src: "{{ item }}"
@@ -91,18 +85,22 @@
     - kube-scheduler
   become: true
 
-#- name: Verify Kubernetes status
-#  shell: kubectl get componentstatuses
-#  register: cmd_result
-#  retries: 5
-#  delay: 20
-#  become: true
+- name: Wait 300 seconds for port 8000 to become open on the host, don't start checking for 10 seconds
+  wait_for:
+    port: 8080
 
-#- assert:
-#    that:
-#      - "'scheduler            Healthy' in cmd_result.stdout"
-#      - "'controller-manager   Healthy' in cmd_result.stdout"
-#      - "'etcd-0               Healthy' in cmd_result.stdout"
+- name: Verify Kubernetes status
+  shell: kubectl get componentstatuses
+  register: cmd_result
+  retries: 5
+  delay: 20
+  become: true
+
+- assert:
+    that:
+      - "'scheduler            Healthy' in cmd_result.stdout"
+      - "'controller-manager   Healthy' in cmd_result.stdout"
+      - "'etcd-0               Healthy' in cmd_result.stdout"
 
 - name: RBAC template
   template:
