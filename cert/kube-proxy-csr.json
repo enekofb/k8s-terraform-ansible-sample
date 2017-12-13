@@ -1,6 +1,5 @@
 {
   "CN": "system:kube-proxy",
-  "hosts": [],
   "key": {
     "algo": "rsa",
     "size": 2048
@@ -9,7 +8,7 @@
     {
       "C": "UK",
       "L": "London",
-      "O": "OpenCredo",
+      "O": "system:node-proxier",
       "OU": "Cluster"
     }
   ]

@@ -8,7 +8,7 @@
   become: true
 
 - name: Set kubectl credentials
-  shell: "kubectl config set-credentials system:node:node01 \
+  shell: "kubectl config set-credentials kube-proxy  \
           --client-certificate={{ certificate_path }}/kube-proxy.pem \
           --client-key={{ certificate_path }}/kube-proxy-key.pem \
           --embed-certs=true \
