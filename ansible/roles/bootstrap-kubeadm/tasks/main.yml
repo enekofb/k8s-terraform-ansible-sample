@@ -1,0 +1,31 @@
+---
+- name: Apt update
+  raw: "apt-get update"
+  retries: 10
+  delay: 20
+
+- name: Install Python
+  raw: "apt-get install -y python"
+  retries: 10
+  delay: 20
+
+- name: setup google cloud reops
+  command: bash -c "curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -"
+
+- name: setup repos
+  command: bash -c "echo deb http://apt.kubernetes.io/ kubernetes-xenial main >> /etc/apt/sources.list.d/kubernetes.list"
+
+- name: Apt update
+  raw: "apt-get update"
+  retries: 10
+  delay: 20
+
+- name: Install packages
+  apt:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - docker.io
+    - kubelet
+    - kubeadm
+    - kubectl

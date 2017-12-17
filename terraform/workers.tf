@@ -62,6 +62,30 @@ resource "aws_security_group" "worker-sg" {
     cidr_blocks = ["${var.vpc_cidr}"]
   }
 
+
+  ingress {
+    from_port = 10250
+    to_port = 10250
+    protocol = "TCP"
+    cidr_blocks = ["${var.vpc_cidr}"]
+  }
+
+
+  ingress {
+    from_port = 10255
+    to_port = 10255
+    protocol = "TCP"
+    cidr_blocks = ["${var.vpc_cidr}"]
+  }
+
+  ingress {
+    from_port = 30000
+    to_port = 32767
+    protocol = "TCP"
+    cidr_blocks = ["${var.vpc_cidr}"]
+  }
+
+
   # Allow all outbound traffic
   egress {
     from_port = 443

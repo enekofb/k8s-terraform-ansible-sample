@@ -1,5 +1,5 @@
-variable control_cidr {
-  description = "CIDR for maintenance: inbound traffic will be allowed from this IPs"
+variable "control_cidr" {
+  default = ""
 }
 
 variable default_keypair_name {

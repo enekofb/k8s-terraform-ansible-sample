@@ -3,7 +3,7 @@
 # Install Python
 #####################
 
-- hosts: all
+- hosts: masters,workers
   gather_facts: false # As Python is not yet installed, we cannot gather host facts
   tasks:
     - name: Apt update

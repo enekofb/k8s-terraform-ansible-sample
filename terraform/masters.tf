@@ -104,6 +104,22 @@ resource "aws_security_group" "master-sg" {
     cidr_blocks = ["${var.vpc_cidr}"]
   }
 
+
+  ingress {
+    from_port = 10250
+    to_port = 10255
+    protocol = "TCP"
+    cidr_blocks = ["${var.vpc_cidr}"]
+  }
+
+
+  ingress {
+    from_port = 2379
+    to_port = 2380
+    protocol = "TCP"
+    cidr_blocks = ["${var.vpc_cidr}"]
+  }
+
   # Allow inbound traffic to the port used by Kubernetes API HTTPS
   ingress {
     from_port = 22
