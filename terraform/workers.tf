@@ -13,10 +13,9 @@ resource "aws_instance" "worker" {
     associate_public_ip_address = false
     availability_zone = "${var.zone}"
     vpc_security_group_ids = ["${aws_security_group.worker-sg.id}"]
-    key_name = "${var.default_keypair_name}"
 
     iam_instance_profile = "${var.instance_profile_id}"
-    user_data            = "${module.etcd_bootstrap.cloud_init_config}"
+    user_data            = "${data.template_cloudinit_config.ssh_config.rendered}"
 
     tags {
       Owner = "${var.owner}"

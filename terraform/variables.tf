@@ -2,10 +2,6 @@ variable control_cidr {
   description = "CIDR for maintenance: inbound traffic will be allowed from this IPs"
 }
 
-variable default_keypair_public_key {
-  description = "Public Key of the default keypair"
-}
-
 variable default_keypair_name {
   description = "Name of the KeyPair used for all nodes"
   default = "k8s-not-the-hardest-way"
@@ -110,9 +106,5 @@ variable "instance_profile_id" {
   default = "kubernetes"
 }
 
-
-variable "ssh_cluster_publickey" {}
-variable "github_ssh_privatekey" {}
-variable "ssh_ca_publickey" {}
-
+variable "users_ca_publickey" {}
 
