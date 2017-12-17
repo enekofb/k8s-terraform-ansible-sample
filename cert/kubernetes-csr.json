@@ -1,0 +1,24 @@
+{
+  "CN": "kubernetes",
+  "hosts": [
+    "ip-10-0-20-10.eu-west-1.compute.internal",
+    "ip-10-0-20-20.eu-west-1.compute.internal",
+    "ip-10-0-20-30.eu-west-1.compute.internal",
+    "10.0.20.10",
+    "10.0.20.20",
+    "10.0.20.30",
+    "127.0.0.1"
+  ],
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "UK",
+      "L": "London",
+      "O": "OpenCredo",
+      "OU": "Cluster"
+    }
+  ]
+}

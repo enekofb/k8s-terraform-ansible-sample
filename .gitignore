@@ -2,6 +2,7 @@
 *.pem
 /ssh.cfg
 /secrets.sh
+*.csr
 
 
 ### OSX ###

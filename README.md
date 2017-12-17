@@ -58,7 +58,234 @@ Revisited with the following objectives
 - DNS add-on
 
 
-## Authentication/Authorization
+## Kubernetes Security
+
+Security in Kubernetes is a important topic that has been recently improved from traditional Kubernetes setup. This section gives an overview on what are they for the given setup
+explaining the more relevant details.  
+
+### Kubernetes API Security
+
+When a request to Kubernetes api is done, three main stage are walked through: [authentication, authorization and admission](https://kubernetes.io/docs/admin/accessing-the-api/).
+
+
+#### [Authentication](https://kubernetes.io/docs/admin/authentication/)
+
+Different [authentication](https://kubernetes.io/docs/admin/authentication/) methods are supported in Kubernetes. 
+Kubernetes uses client certificates, bearer tokens, an authenticating proxy, or HTTP basic auth to authenticate API requests through authentication plugins.
+Authentication brings about the user what is its Username, UID, Groups and metadata. 
+The system:authenticated group is included in the list of groups for all authenticated users.
+
+The cluster provisioned here setups in [api-server](./kubernetes/roles/master/templates/kube-apiserver.service.j2) 
+
+1. [X509 Client Certs](https://kubernetes.io/docs/admin/authentication/#x509-client-certs) 
+
+By using ` --client-ca-file=/var/lib/kubernetes/ca.pem` indicates that users that presents
+certs signed by this CA will be authenticated. The common name of the subject is used as the user name for the request.
+
+For instance,node01 presents a certificate based on the following configuration 
+
+```
+{
+  "CN": "system:node:ip-10-0-20-30.eu-west-1.compute.internal",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "UK",
+      "L": "London",
+      "O": "system:nodes",
+      "OU": "Cluster"
+    }
+  ]
+}
+
+
+```
+
+Saying that its username is `"CN": "system:node:ip-10-0-20-30.eu-west-1.compute.internal"` and belong 
+to the groups ` "O": "system:nodes"`.
+
+
+2. [Service Account Tokens](https://kubernetes.io/docs/admin/authentication/#service-account-tokens)
+
+Service accounts are usually created automatically by the API server and associated with pods running in the cluster through the ServiceAccount Admission Controller.
+Bearer tokens are mounted into pods at well known locations, and allow in cluster processes to talk to the API server.
+
+In our setup, it is specify using `  --service-account-key-file=/var/lib/kubernetes/ca-key.pem `.  
+
+3. [Kubelet Authentication](https://kubernetes.io/docs/admin/kubelet-authentication-authorization/)
+
+A kubelet’s HTTPS endpoint exposes APIs which give access to data of varying sensitivity, and allow you to perform operations with varying levels of power on the node and within containers. For 
+that, api server needs to setup its way to authenticate against kubelet. Api server
+uses certificates for its authentication.
+
+```
+  --kubelet-certificate-authority=/var/lib/kubernetes/ca.pem \
+  --kubelet-client-certificate=/var/lib/kubernetes/kubernetes.pem \
+  --kubelet-client-key=/var/lib/kubernetes/kubernetes-key.pem \
+  --kubelet-https=true \
+
+``` 
+
+#### [Authorization](https://kubernetes.io/docs/admin/authorization/)
+
+There are several authorization modes avaiable in kubernetes. Two are the modes
+used in the current setup (Node and RBAC). Unlike authentication, authorization modes are well located as a setting in the api server by `authorization-mode` setting that in our case, 
+as said is populated with `--authorization-mode=Node,RBAC`.
+
+1. [Node](https://kubernetes.io/docs/admin/authorization/node/)
+
+Node authorization is a special-purpose authorization mode that specifically authorizes API requests made by kubelets. Its use
+happens when kubelets register itself against api-server. 
+In order to be authorized by the Node authorizer, kubelets must use a credential that identifies them as being in the system:nodes group, with a username of system:node:<nodeName>. 
+This group and user name format match the identity created for each kubelet as part of kubelet TLS bootstrapping.
+
+```
+{
+  "CN": "system:node:ip-10-0-20-30.eu-west-1.compute.internal",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "UK",
+      "L": "London",
+      "O": "system:nodes",
+      "OU": "Cluster"
+    }
+  ]
+}
+```
+
+2. [RBAC](https://kubernetes.io/docs/admin/authorization/rbac/)
+
+RBAC is used instead of ABAC. As of 1.8, RBAC mode is stable and backed by the rbac.authorization.k8s.io/v1 API. In addition to its usages for our applications, RBAC is used
+for authorization in the context of system components. 
+
+In particular, the following ClusterRoles and ClusterRoleBindings applies in the queries
+that api-server does to any kubelet.
+
+```
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+  name: system:kube-apiserver-to-kubelet
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes/proxy
+      - nodes/stats
+      - nodes/log
+      - nodes/spec
+      - nodes/metrics
+    verbs:
+      - "*"
+```      
+that is binded to api-server (kubernetes user) by the following ClusterRoleBinding
+      
+```
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: system:kube-apiserver
+  namespace: ""
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:kube-apiserver-to-kubelet
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: kubernetes
+```
+
+#### [Admission Control](https://kubernetes.io/docs/admin/admission-controllers/)
+
+The third level of security in the api server. Current setup defines the following list of 
+admission controllers ` --admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota`
+
+
+### Transport Security
+
+## Setting up a Certificate Authority and Creating TLS Certificates
+
+[Extracted from] (https://github.com/enekofb/kubernetes-the-hard-way/blob/master/docs/04-certificate-authority.md)
+
+This lab requires the `cfssl` and `cfssljson` binaries. Download them from the [cfssl repository](https://pkg.cfssl.org).
+
+- Added playbook in order to setup the certs
+
+
+### Install CFSSL (for Mac Osx)
+
+```
+wget https://pkg.cfssl.org/R1.2/cfssl_darwin-amd64
+chmod +x cfssl_darwin-amd64
+sudo mv cfssl_darwin-amd64 /usr/local/bin/cfssl
+```
+
+```
+wget https://pkg.cfssl.org/R1.2/cfssljson_darwin-amd64
+chmod +x cfssljson_darwin-amd64
+sudo mv cfssljson_darwin-amd64 /usr/local/bin/cfssljson
+
+```
+
+### Install CFSSL (for Linux)
+
+```
+wget https://pkg.cfssl.org/R1.2/cfssl_linux-amd64
+chmod +x cfssl_linux-amd64
+sudo mv cfssl_linux-amd64 /usr/local/bin/cfssl
+```
+
+```
+wget https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64
+chmod +x cfssljson_linux-amd64
+sudo mv cfssljson_linux-amd64 /usr/local/bin/cfssljson
+```
+
+### Set up a Certificate Authority
+
+- both CA configuration file and CA certificate signinig request could be found
+at folder $k8s-terraform-ansible-sample/cert 
+
+
+### Generate CA certificate and CA private key
+
+```
+cd $k8s-terraform-ansible-sample/cert
+cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+```
+
+Results:
+
+```
+ca-key.pem
+ca.pem
+```
+
+
+### Runtime Security
+
+### Network Security
+
+
+
+### Infrastructure Security
+
+
+
+
+
 
 ### AWS KeyPair
 
@@ -74,7 +301,7 @@ by using user data feature of our EC2 instances.
 
 resource "aws_instance" "etcd" {
     ...
-    user_data            = "${data.template_cloudinit_config.ssh_config.rendered}"
+    user_data  = "${data.template_cloudinit_config.ssh_config.rendered}"
 
     tags {
 }
@@ -190,50 +417,6 @@ e.g.
 $ ssh -F ssh.cfg worker0
 ```
 
-## Setting up a Certificate Authority and Creating TLS Certificates
-
-[Extracted from] (https://github.com/enekofb/kubernetes-the-hard-way/blob/master/docs/04-certificate-authority.md)
-
-This lab requires the `cfssl` and `cfssljson` binaries. Download them from the [cfssl repository](https://pkg.cfssl.org).
-
-- Added playbook in order to setup the certs
-
-
-### Install CFSSL (for Mac Osx)
-
-```
-wget https://pkg.cfssl.org/R1.2/cfssl_darwin-amd64
-chmod +x cfssl_darwin-amd64
-sudo mv cfssl_darwin-amd64 /usr/local/bin/cfssl
-```
-
-```
-wget https://pkg.cfssl.org/R1.2/cfssljson_darwin-amd64
-chmod +x cfssljson_darwin-amd64
-sudo mv cfssljson_darwin-amd64 /usr/local/bin/cfssljson
-```
-
-### Set up a Certificate Authority
-
-- both CA configuration file and CA certificate signinig request could be found
-at folder $k8s-terraform-ansible-sample/cert 
-
-
-### Generate CA certificate and CA private key
-
-```
-cd $k8s-terraform-ansible-sample/cert
-cfssl gencert -initca ca-csr.json | cfssljson -bare ca
-```
-
-Results:
-
-```
-ca-key.pem
-ca.pem
-```
-
-
 ## Install Kubernetes, with Ansible
 
 Run Ansible commands from `./ansible` subdirectory.
@@ -343,10 +526,3 @@ There are still known simplifications which are listed below, compared to a prod
 - No stable private or public DNS naming (only dynamic DNS names, generated by AWS)
 - Not using VPC Endpoint for services.
 - EC2 IAM role need to restricted granted services access. 
-
-# More 
-
-needed to create this 
-
-kubectl create clusterrolebinding system-authenticated-cluster-admin-binding-kubelet --clusterrole=cluster-admin --group=system:kubelet-bootstrap
-clusterrolebinding "system-authenticated-cluster-admin-binding-kubelet" created

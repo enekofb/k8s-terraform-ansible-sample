@@ -40,17 +40,6 @@
     - kubectl
   become: true
 
-- name: Copy Authorisation files
-  copy:
-    src: "{{ item }}"
-    dest: /var/lib/kubernetes
-    owner: root
-    group: root
-    mode: 0644
-  with_items:
-    - authorization-policy.jsonl
-  become: true
-
 - name: Add kube-* systemd unit
   template:
     src: "{{ item }}.service.j2"
@@ -108,6 +97,5 @@
     dest: /var/lib/kubernetes/rbac.yaml
   become: true
 
-
-- name: Create RBAC kube-api-server-to-kubelet
-  shell: "kubectl apply -f /var/lib/kubernetes/rbac.yaml"
+#- name: Create RBAC kube-api-server-to-kubelet
+#  shell: "kubectl apply -f /var/lib/kubernetes/rbac.yaml"
