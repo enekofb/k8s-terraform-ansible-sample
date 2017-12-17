@@ -4,44 +4,26 @@ A worked example to provision a Kubernetes cluster on AWS from scratch, using Te
 
 See the companion article https://opencredo.com/kubernetes-aws-terraform-ansible-1/ for details about goals, design decisions and simplifications.
 
-Revisited with the following objectives
-
-1. Revisit current tutorial to move from learning tool to a production-ready setup.
-2. Upgrade to kuberentes 1.8.0.
-3. Upgrade Terraform to 0.11.
-
-## Infrastructure 
-
-### AWS VPC
-
-- Production-like VPC setup that including public and private subnettings.
-- Cluster access through a Bastion instance that is accessible only by a Control IP.
-- Public subnetting for Bastion instance and ELBs.
-- Private subnetting for Kubernetes components. 
-- Usage of NAT gateway for internal access to Internet.
-- Security groups following minimum access required.
-- Usage of EC2 instance IAM Roles to control instance usage to AWS services.
-- SSH access to ec2 instances based on certs not keys.
-
-### Kubernetes Components
-
-- 3 EC2 instances for HA Kbernetes Master setup with: Kubernetes API, Scheduler and Controller Manager
+- AWS VPC
+- 3 EC2 instances for HA Kubernetes Control Plane: Kubernetes API, Scheduler and Controller Manager
 - 3 EC2 instances for *etcd* cluster
 - 3 EC2 instances as Kubernetes Workers (aka Minions or Nodes)
 - Kubenet Pod networking (using CNI)
-- HTTPS between components and control API using own CA.
-- Node self-registrtion by using RBAC and NodeAuthorization.
+- HTTPS between components and control API
+- Sample *nginx* service deployed to check everything works
 
-## Tooling and versions usage
+*This is a learning tool, not a production-ready setup.*
+
+## Requirements and Versions
 
 *Requirements on control machine:*
 
-- Terraform v0.11
+- Terraform (tested with Terraform v0.10.6)
 - Python (tested with Python 2.7.12, may be not compatible with older versions; requires Jinja2 2.8)
 - Python *netaddr* module
-- Ansible v2.4
+- Ansible (tested with Ansible 2.1.0.0)
 - *cfssl* and *cfssljson*:  https://github.com/cloudflare/cfssl
-- Kubectl - Kubernetes CLI
+- Kubernetes CLI
 - SSH Agent
 - (optionally) AWS CLI
 
@@ -49,7 +31,7 @@ Revisited with the following objectives
 
 - Kubernetes 1.8.0
 - Docker 1.12.6
-- etcd 3.2.8
+- etcd 3.1.4
 - [CNI Based Networking](https://github.com/containernetworking/cni)
 - Secure communication between all components (etcd, control plane, workers)
 - Default Service Account and Secrets
@@ -58,104 +40,13 @@ Revisited with the following objectives
 - DNS add-on
 
 
-## Authentication/Authorization
-
-### RBAC
-
-RBAC is used instead of ABAC. It stills in beta but is currently and future standard way to 
-authorization in Kubernetes. In addition to its usages for our applications, RBAC is used
-for authorization in the context of system components. In particular, when kubelet tries
-to register in the cluster, if there is no role and rolebinding that allows it to register, it wont
-be able add to the cluster. 
-
-To allow that the following ClusterRole has been created
-
-```
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  annotations:
-    rbac.authorization.kubernetes.io/autoupdate: "true"
-  labels:
-    kubernetes.io/bootstrapping: rbac-defaults
-  name: system:kube-apiserver-to-kubelet
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - nodes/proxy
-      - nodes/stats
-      - nodes/log
-      - nodes/spec
-      - nodes/metrics
-    verbs:
-      - "*"
-```      
-that is binded to kubelet by the following ClusterRoleBinding
-      
-```
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: system:kubelet-cluster-admin
-  namespace: ""
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-  - apiGroup: rbac.authorization.k8s.io
-    kind: Group
-    name: system:kubelet-bootstrap    
-```
+## AWS Credentials
 
 ### AWS KeyPair
 
-- No longer needed so ssh into machine is done by using certs signed by CA.
+You need a valid AWS Identity (`.pem`) file and the corresponding Public Key. Terraform imports the [KeyPair](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html) in your AWS account. Ansible uses the Identity to SSH into machines.
 
-### SSH using CA signed certs
-
-In order to avoid to add to the servers the keys when added a new admin user to the cluster we could 
-configure SSH server in any machine using CA cert signed approach. This feature is added to our setup
-by using user data feature of our EC2 instances.
-
-```
-
-resource "aws_instance" "etcd" {
-    ...
-    user_data  = "${data.template_cloudinit_config.ssh_config.rendered}"
-
-    tags {
-}
-```
-where the script that cloud-init changes ssh configuration configuration to use `TrustedUserCAKeys`
-
-```
-#!/bin/bash
-
-...
-
-# Put the public key of our user CA in place.
-cat << EOF > /etc/ssh/users_ca.pub
-${users_ca_publickey}
-EOF
-
-# Ensure the centos user is the only user that can be accessed via certificate
-cat << EOF > /etc/ssh/authorized_principals
-ubuntu
-EOF
-
-# Line return is important!
-cat << EOF >> /etc/ssh/sshd_config
-
-TrustedUserCAKeys /etc/ssh/users_ca.pub
-AuthorizedPrincipalsFile  /etc/ssh/authorized_principals
-EOF
-
-# Restart the ssh server
-service sshd restart
-
-```
+Please read [AWS Documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#how-to-generate-your-own-key-and-import-it-to-aws) about supported formats.
 
 ### Terraform and Ansible authentication
 
@@ -168,7 +59,6 @@ $ export AWS_SECRET_ACCESS_KEY="<secret-key>"
 If you plan to use AWS CLI you have to set `AWS_DEFAULT_REGION`.
 
 Ansible expects the SSH identity loaded by SSH agent:
-
 ```
 $ ssh-add <keypair-name>.pem
 ```
@@ -177,21 +67,27 @@ $ ssh-add <keypair-name>.pem
 
 Terraform expects some variables to define your working environment:
 
-- `control_cidr`: The CIDR of your IP. Bastion instance will only accept connections from this address. Note this is a CIDR, not a single IP. e.g. `123.45.67.89/32` (mandatory)
+- `control_cidr`: The CIDR of your IP. All instances will accept only traffic from this address only. Note this is a CIDR, not a single IP. e.g. `123.45.67.89/32` (mandatory)
+- `default_keypair_public_key`: Valid public key corresponding to the Identity you will use to SSH into VMs. e.g. `"ssh-rsa AAA....xyz"` (mandatory)
 
 **Note that Instances and Kubernetes API will be accessible only from the "control IP"**. If you fail to set it correctly, you will not be able to SSH into machines or run Ansible playbooks.
 
 You may optionally redefine:
 
+- `default_keypair_name`: AWS key-pair name for all instances.  (Default: "k8s-not-the-hardest-way")
 - `vpc_name`: VPC Name. Must be unique in the AWS Account (Default: "kubernetes")
 - `elb_name`: ELB Name for Kubernetes API. Can only contain characters valid for DNS names. Must be unique in the AWS Account (Default: "kubernetes")
 - `owner`: `Owner` tag added to all AWS resources. No functional use. It becomes useful to filter your resources on AWS console if you are sharing the same AWS account with others. (Default: "kubernetes")
+
+
 
 The easiest way is creating a `terraform.tfvars` [variable file](https://www.terraform.io/docs/configuration/variables.html#variable-files) in `./terraform` directory. Terraform automatically imports it.
 
 Sample `terraform.tfvars`:
 ```
+default_keypair_public_key = "ssh-rsa AAA...zzz"
 control_cidr = "123.45.67.89/32"
+default_keypair_name = "lorenzo-glf"
 vpc_name = "Lorenzo ETCD"
 elb_name = "lorenzo-etcd"
 owner = "Lorenzo"
@@ -245,9 +141,6 @@ $ ssh -F ssh.cfg worker0
 
 This lab requires the `cfssl` and `cfssljson` binaries. Download them from the [cfssl repository](https://pkg.cfssl.org).
 
-- Added playbook in order to setup the certs
-
-
 ### Install CFSSL (for Mac Osx)
 
 ```
@@ -260,21 +153,6 @@ sudo mv cfssl_darwin-amd64 /usr/local/bin/cfssl
 wget https://pkg.cfssl.org/R1.2/cfssljson_darwin-amd64
 chmod +x cfssljson_darwin-amd64
 sudo mv cfssljson_darwin-amd64 /usr/local/bin/cfssljson
-
-```
-
-### Install CFSSL (for Linux)
-
-```
-wget https://pkg.cfssl.org/R1.2/cfssl_linux-amd64
-chmod +x cfssl_linux-amd64
-sudo mv cfssl_linux-amd64 /usr/local/bin/cfssl
-```
-
-```
-wget https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64
-chmod +x cfssljson_linux-amd64
-sudo mv cfssljson_linux-amd64 /usr/local/bin/cfssljson
 ```
 
 ### Set up a Certificate Authority
@@ -304,14 +182,6 @@ Run Ansible commands from `./ansible` subdirectory.
 
 We have multiple playbooks.
 
-### Generate CA and certs to use for provisioning kubernetes components
-
-- located at `cert` folder.
-
-```
-$ ansible-playbook kubernetes-pki.yaml
-```
-
 ### Install and set up Kubernetes cluster
 
 Install Kubernetes components and *etcd* cluster.
@@ -337,7 +207,7 @@ etcd-2               Healthy   {"health": "true"}
 etcd-1               Healthy   {"health": "true"}
 etcd-0               Healthy   {"health": "true"}
 
- $ kubectl get nodes
+$ kubectl get nodes
 NAME                                       STATUS    AGE
 ip-10-43-0-30.eu-west-1.compute.internal   Ready     6m
 ip-10-43-0-31.eu-west-1.compute.internal   Ready     6m
@@ -396,14 +266,58 @@ $ curl http://<worker-0-public-ip>:<exposed-port>
 
 The service is exposed on all Workers using the same port (see Workers public IPs in Terraform output).
 
-# Known limitations / simplifications
+# Known simplifications
 
-There are still known simplifications which are listed below, compared to a production-ready solution:
+There are many known simplifications, compared to a production-ready solution:
 
 - No actual integration between Kubernetes and AWS.
-- No additional Kubernetes add-on (DNS, Dashboard, Logging...) -- TBA: is this still true?
+- No additional Kubernetes add-on (DNS, Dashboard, Logging...)
 - Simplified Ansible lifecycle. Playbooks support changes in a simplistic way, including possibly unnecessary restarts.
 - Instances use static private IP addresses
 - No stable private or public DNS naming (only dynamic DNS names, generated by AWS)
-- Not using VPC Endpoint for services.
-- EC2 IAM role need to restricted granted services access. 
+
+# Improvements
+
+- No public IPs but bastion.
+- Using certs signed by ca. 
+- Using bootstrap tookens.
+- Very basic Service Account and Secret (to change them, modify: `./ansible/roles/controller/files/token.csv` and `./ansible/roles/worker/templates/kubeconfig.j2`)
+- Using RBAC not ABAC
+
+# TODO
+
+- add vpc endpoints for services
+- revisit iam policy document
+- there is coupling between roles: for instance, i cannot provision masters if i havent
+set facts from etcds. however using inventory properties could be enough for the purporse of the task. 
+- review docker version
+
+# notice from version 1.6
+
+Api server there is audit and RBAC ! 
+
+  --audit-log-maxage=30 \
+  --audit-log-maxbackup=3 \
+  --audit-log-maxsize=100 \
+  --audit-log-path=/var/lib/audit.log \
+  --authorization-mode=RBAC \  
+
+
+# More 
+
+needed to create this 
+
+kubectl create clusterrolebinding system-authenticated-cluster-admin-binding-kubelet --clusterrole=cluster-admin --group=system:kubelet-bootstrap
+clusterrolebinding "system-authenticated-cluster-admin-binding-kubelet" created
+
+
+
+# kubeadm
+
+
+https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/
+
+## kubeadm init
+
+https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#config-file
+
