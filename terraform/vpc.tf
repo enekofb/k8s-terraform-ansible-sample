@@ -144,6 +144,9 @@ resource "aws_instance" "bastion" {
   availability_zone = "${var.zone}"
   vpc_security_group_ids = ["${aws_security_group.bastion-sg.id}"]
 
+  iam_instance_profile = "${var.instance_profile_id}"
+  user_data            = "${data.template_cloudinit_config.ssh_config.rendered}"
+
   tags {
     Owner = "${var.owner}"
     Name = "bastion"
@@ -201,4 +204,8 @@ resource "aws_security_group" "bastion-sg" {
     Owner = "${var.owner}"
     Name = "bastion-sg"
   }
+}
+
+output "kubernetes_bastion_public_ip" {
+  value = "${aws_eip.bastion-eip.public_ip}"
 }

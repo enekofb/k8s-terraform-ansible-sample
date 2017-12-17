@@ -1,5 +1,2 @@
 ---
-bootstrap_token: "chAng3m3"
-
-kubernetes_version: "v1.8.0"
 kubernetes_download_path: "https://storage.googleapis.com/kubernetes-release/release/{{ kubernetes_version }}/bin/linux/amd64"
