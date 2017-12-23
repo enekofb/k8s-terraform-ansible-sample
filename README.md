@@ -47,9 +47,9 @@ Revisited with the following objectives
 
 *Components and version used for this tutorial:* 
 
-- Kubernetes 1.8.0
+- Kubernetes 1.9.0
 - Docker 1.12.6
-- etcd 3.2.8
+- etcd 3.2.11
 - [CNI Based Networking](https://github.com/containernetworking/cni)
 - Secure communication between all components (etcd, control plane, workers)
 - Default Service Account and Secrets

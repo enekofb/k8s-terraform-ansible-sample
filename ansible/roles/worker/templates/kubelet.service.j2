@@ -1,6 +1,6 @@
 [Unit]
 Description=Kubernetes Kubelet
-Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+Documentation=https://github.com/kubernetes/kubernetes
 After=docker.service
 Requires=docker.service
 
@@ -9,6 +9,7 @@ ExecStart=/usr/bin/kubelet \
   --allow-privileged=true \
   --anonymous-auth=false \
   --authorization-mode=Webhook \
+  --cloud-provider= \\
   --client-ca-file=/var/lib/kubernetes/ca.pem \
   --cluster-dns={{ kubernetes_cluster_dns }} \
   --cluster-domain=cluster.local \
@@ -18,7 +19,6 @@ ExecStart=/usr/bin/kubelet \
   --serialize-image-pulls=false \
   --pod-cidr={{kubernetes_pod_cluster_cidr}} \
   --register-node=true \
-  --require-kubeconfig \
   --tls-cert-file=/var/lib/kubernetes/node01.pem \
   --tls-private-key-file=/var/lib/kubernetes/node01-key.pem \
   --v=2
