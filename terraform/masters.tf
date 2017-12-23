@@ -14,10 +14,9 @@ resource "aws_instance" "master" {
 
     availability_zone = "${var.zone}"
     vpc_security_group_ids = ["${aws_security_group.master-sg.id}"]
-    key_name = "${var.default_keypair_name}"
 
     iam_instance_profile = "${var.instance_profile_id}"
-//    user_data            = "${module.etcd_bootstrap.cloud_init_config}"
+    user_data            = "${data.template_cloudinit_config.ssh_config.rendered}"
 
     tags {
         Owner = "${var.owner}"

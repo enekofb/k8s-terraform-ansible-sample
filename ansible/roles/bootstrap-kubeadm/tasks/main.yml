@@ -26,6 +26,25 @@
     state: present
   with_items:
     - docker.io
-    - kubelet
-    - kubeadm
+
+- name: Download Kubernetes binaries
+  get_url:
+    url: "{{ kubernetes_download_path}}/{{ item }}"
+    dest: "/usr/bin"
+    group: root
+    owner: root
+    mode: 0755
+    # TODO Add hash check
+  with_items:
     - kubectl
+    - kubeadm
+    - kubelet
+  become: true
+
+- name: kubeadm reset
+  command: "kubeadm reset"
+
+- name: generate kubeadm token
+  command: kubeadm token generate
+  register: kubetoken
+  run_once: true

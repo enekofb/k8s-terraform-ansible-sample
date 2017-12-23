@@ -1,8 +1,4 @@
 ---
-#####################
-# Install Python
-#####################
-
 - hosts: masters,workers
   gather_facts: false # As Python is not yet installed, we cannot gather host facts
   become: true
@@ -13,11 +9,12 @@
   become: true
   tasks:
     - name: kubeadm init kubernetes_pod_cluster_cidr
-      command: "kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-checks-errors"
+      command: "kubeadm init --pod-network-cidr=10.244.0.0/16 --token {{kubetoken.stdout}}  --kubernetes-version {{kubernetes_version}}"
       register: kubeadmin_init_output
+      ignore_errors: true
 
     - name: setup config for kubectl
-      command: bash -c "mkdir -p $HOME/.kube && cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && chown $(id -u):$(id -g) $HOME/.kube/config"
+      command: bash -c "mkdir -p $HOME/.kube && cp -f /etc/kubernetes/admin.conf $HOME/.kube/config && chown $(id -u):$(id -g) $HOME/.kube/config"
 
     - name: download flannel pod network
       get_url:
@@ -26,10 +23,6 @@
 
     - name: create flannel pod network
       command: kubectl apply -f /etc/kubernetes/kube-flannel.yml
-
-    - name: Wait 300 seconds for port 8080 to become open on the host, don't start checking for 10 seconds
-      wait_for:
-        port: 8080
 
     - name: Verify Kubernetes status
       shell: kubectl get componentstatuses
@@ -44,9 +37,17 @@
           - "'controller-manager   Healthy' in cmd_result.stdout"
           - "'etcd-0               Healthy' in cmd_result.stdout"
 
+- hosts: workers
+  become: true
+  tasks:
+    - name: kubeadm join
+      command: "kubeadm join --token {{kubetoken.stdout}} 10.0.20.20:6443 --discovery-token-unsafe-skip-ca-verification"
 
-#- hosts: workers
-#  become: true
-#  tasks:
-#    - name: kubeadm join
-#      command: "kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>"
+
+- hosts: masters[0]
+  become: true
+  tasks:
+    - name: smoke test
+      command: kubectl run nginx --image=nginx
+    - command: kubectl rollout status deployment/nginx
+    - command: kubectl delete deployment/nginx
