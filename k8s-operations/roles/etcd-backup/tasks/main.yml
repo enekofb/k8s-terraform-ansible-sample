@@ -1,0 +1,6 @@
+---
+- include_tasks: create-backup.yml
+  tags: ['create']
+
+- include_tasks: restore-backup.yml
+  tags: ['restore']

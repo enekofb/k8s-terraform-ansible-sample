@@ -1,0 +1,14 @@
+[tag_ansibleNodeType_etcd]
+
+[tag_ansibleNodeType_worker]
+
+[tag_ansibleNodeType_controller]
+
+[etcds:children]
+tag_ansibleNodeType_etcd
+
+[workers:children]
+tag_ansibleNodeType_worker
+
+[masters:children]
+tag_ansibleNodeType_master

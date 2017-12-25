@@ -1,0 +1,24 @@
+---
+#######################
+# K8s etcd backup playbook
+#######################
+
+- name: bootstrap k8s operations
+  hosts: all
+  become: true
+  gather_facts: false # As Python is not yet installed, we cannot gather host facts
+  tasks:
+
+    - name: Install Pip
+      package:
+        name: python-pip
+        state: present
+
+    - name: Install awscli
+      pip:
+        name: "{{item}}"
+      with_items:
+      - boto
+      - awscli
+      - boto3
+      - botocore

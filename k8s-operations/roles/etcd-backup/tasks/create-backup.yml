@@ -1,0 +1,25 @@
+---
+- name: verify awscli
+  command: "aws s3 ls {{s3_k8s_backup_bucket}}"
+
+- name: Verify etcd cluster health
+  shell: etcdctl --ca-file=/etc/etcd/ca.pem cluster-health
+
+- name: Take snapshot
+  shell: "ETCDCTL_API=3 etcdctl --cacert=/etc/etcd/ca.pem --endpoints=https://{{hostvars['etcd0']['ec2_private_ip_address']}}:2379 snapshot save /tmp/{{k8s_backup_filename}}"
+
+- name: Verify snapshot
+  shell: "ETCDCTL_API=3 etcdctl --cacert=/etc/etcd/ca.pem --endpoints=https://{{hostvars['etcd0']['ec2_private_ip_address']}}:2379 snapshot status /tmp/{{k8s_backup_filename}}"
+
+- name: Store snapshot into s3
+  s3:
+    bucket: "{{s3_k8s_backup_bucket}}"
+    object: "{{k8s_backup_filename}}"
+    src:  "/tmp/{{k8s_backup_filename}}"
+    mode: put
+
+#- name: Store snapshot in s3
+#  shell: "aws s3 cp  "
+#
+#- name: Verify snapshot stored
+#  shell: "aws ls s3://{{s3_k8s_backup_bucket}}/{{k8s_backup_filename}}"

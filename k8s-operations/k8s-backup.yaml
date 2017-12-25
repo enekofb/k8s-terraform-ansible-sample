@@ -1,0 +1,9 @@
+---
+#######################
+# K8s etcd backup playbook
+#######################
+
+- name: etcd backup
+  hosts: etcds[0]
+  roles:
+    - etcd-backup

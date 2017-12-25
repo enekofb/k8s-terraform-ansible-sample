@@ -93,4 +93,3 @@ resource "aws_security_group" "etcd-sg" {
     Name = "etcd-sg"
   }
 }
-

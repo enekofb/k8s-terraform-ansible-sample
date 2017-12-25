@@ -1,0 +1,15 @@
+---
+- name: Verify etcd cluster health
+  shell: etcdctl --ca-file=/etc/etcd/ca.pem cluster-health
+
+- name: Get snapshot from s3
+  s3:
+    bucket: "{{s3_k8s_backup_bucket}}"
+    object: "{{k8s_backup_filename}}"
+    dest: "/tmp/{{k8s_backup_filename}}"
+    mode: get
+
+- name: Restore snapshot
+  shell: "ETCDCTL_API=3 etcdctl --cacert=/etc/etcd/ca.pem --endpoints=https://{{hostvars['etcd0']['ec2_private_ip_address']}}:2379 snapshot restore /tmp/{{k8s_backup_filename}}"
+
+
