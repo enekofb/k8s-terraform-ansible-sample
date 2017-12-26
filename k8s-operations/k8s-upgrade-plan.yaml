@@ -1,0 +1,26 @@
+---
+#######################
+# K8s etcd backup playbook
+#######################
+
+- name: kubernetes upgrade
+  hosts: masters[0]
+  become: true
+  vars:
+    kubernetes_current_version: "v1.8.0"
+    kubernetes_desired_version: "v1.9.0"
+    kubernetes_desired_version_download_path: "https://storage.googleapis.com/kubernetes-release/release/{{ kubernetes_desired_version }}/bin/linux/amd64"
+  tasks:
+  - name: Update kubeadm to desired version
+    get_url:
+      url: "{{ kubernetes_desired_version_download_path}}/kubeadm"
+      dest: "/usr/bin"
+      mode: 0500
+  - name: kubeadm upgrade plan
+    command: kubeadm upgrade plan
+    register: kubeadm_upgrade_plan
+
+  - assert:
+      that: "'{{kubernetes_desired_version}}' in kubeadm_upgrade_plan.stdout"
+
+

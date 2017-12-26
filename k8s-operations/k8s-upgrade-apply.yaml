@@ -1,0 +1,40 @@
+---
+#######################
+# K8s etcd backup playbook
+#######################
+
+- name: kubernetes upgrade
+  hosts: masters[0]
+  become: true
+  vars:
+    kubernetes_desired_version: "v1.9.0"
+  tasks:
+  - name: kubeadm upgrade apply
+    command: "kubeadm upgrade apply {{kubernetes_desired_version}} -y"
+    register: kubeadm_upgrad_apply
+
+  - assert:
+      that: "'[upgrade/successful] SUCCESS!' in kubeadm_upgrad_apply.stdout"
+
+- name: prepare for maintenance
+  hosts: masters,workers
+  become: true
+  vars:
+    kubernetes_desired_version: "v1.9.0"
+    kubernetes_desired_version_download_path: "https://storage.googleapis.com/kubernetes-release/release/{{ kubernetes_desired_version }}/bin/linux/amd64"
+  tasks:
+  - name: stop kubelet
+    command: systemctl stop kubelet
+
+  - name: update kubelet
+    get_url:
+      url: "{{ kubernetes_desired_version_download_path}}/kubelet"
+      dest: "/usr/bin"
+      mode: 0500
+
+  - name: start kubelet
+    command: systemctl start kubelet
+
+
+
+

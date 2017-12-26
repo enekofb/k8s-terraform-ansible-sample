@@ -27,4 +27,21 @@ Requirements:
 
 - In order to restore a snapshot use the following `ansible-playbook -v k8s-backup.yaml --tags restore`
 
+## Kubernetes upgrade
+
+### Kubeadm cluster
+
+- You have a kubeadm cluster in version 1.8.0
+- You want to upgrade it to version 1.9.0 
+
+In order to prepare the upgrade just run the playbook  `ansible-playbook -v k8s-upgrade-plan.yaml`
+In order to apply the upgrade just run the playbook `ansible-playbook -v k8s-upgrade-apply.yaml`
+
+### Non kubeadm cluster
+
+TBA
+
+
+
+
 
