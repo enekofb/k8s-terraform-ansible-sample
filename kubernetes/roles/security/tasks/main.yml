@@ -1,0 +1,9 @@
+---
+- name: Copy default PSP
+  copy:
+    src: psp.yaml
+    dest: /var/lib/kubernetes/psp.yaml
+
+- name: Create PSP and default role and role bindings
+  shell: "kubectl apply -f /var/lib/kubernetes/psp.yaml"
+

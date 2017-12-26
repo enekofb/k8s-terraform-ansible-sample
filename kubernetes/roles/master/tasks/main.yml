@@ -91,11 +91,10 @@
       - "'controller-manager   Healthy' in cmd_result.stdout"
       - "'etcd-0               Healthy' in cmd_result.stdout"
 
-- name: RBAC template
-  template:
-    src: rbac.yaml.j2
+- name: Copy RBAC
+  copy:
+    src: rbac.yaml
     dest: /var/lib/kubernetes/rbac.yaml
-  become: true
 
-#- name: Create RBAC kube-api-server-to-kubelet
-#  shell: "kubectl apply -f /var/lib/kubernetes/rbac.yaml"
+- name: Create RBAC kube-api-server-to-kubelet
+  shell: "kubectl apply -f /var/lib/kubernetes/rbac.yaml"

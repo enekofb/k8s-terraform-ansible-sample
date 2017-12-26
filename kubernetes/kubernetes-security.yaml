@@ -1,0 +1,7 @@
+---
+- hosts: masters[0]
+  vars:
+    kubernetes_security_enhanced: "true"
+  become: true
+  roles:
+    - security

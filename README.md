@@ -213,6 +213,29 @@ The third level of security in the api server. Current setup defines the followi
 admission controllers ` --admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota`
 
 
+##### [Pod Security Policies](https://kubernetes.io/docs/concepts/policy/pod-security-policy)
+
+A Pod Security Policy is a cluster-level resource that controls security sensitive aspects of the pod specification. It is enabled by using
+it as admission controller `--admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota,PodSecurityPolicy`.
+
+PodSecurityPolicies are enforced by enabling the admission controller, but doing so without authorizing any policies will prevent any pods from being created in the cluster.
+
+An example of how to use it is found [here](https://kubernetes.io/docs/concepts/policy/pod-security-policy/#example)
+
+`
+ubuntu@ip-10-0-20-20:~$ kubectl  get psp --all-namespaces
+No resources found.
+`
+That creating a deployment `ubuntu@ip-10-0-20-20:~$ kubectl run nginx --image=nginx` results in the following error 
+```
+Dec 26 22:27:55 ip-10-0-20-20.eu-west-1.compute.internal kube-controller-manager[4271]: I1226 22:27:55.818791    4271 event.go:218] 
+Event(v1.ObjectReference{Kind:"ReplicaSet", Namespace:"default", Name:"nginx-7c87f569d", UID:"ec8f4f8b-ea8b-11e7-b84e-024981114974", 
+APIVersion:"extensions", ResourceVersion:"1776", FieldPath:""}): type: 'Warning' reason: 'FailedCreate' Error creating: pods "nginx-7c87f569d-" 
+is forbidden: no providers available to validate pod request
+```
+
+Meaning that there are  no pod security policy valid associated to the service account trying to create the pods.
+
 ### Transport Security
 
 ## Setting up a Certificate Authority and Creating TLS Certificates
@@ -275,6 +298,9 @@ ca.pem
 
 
 ### Runtime Security
+
+
+
 
 ### Network Security
 
@@ -437,6 +463,11 @@ Install Kubernetes components and *etcd* cluster.
 ```
 $ ansible-playbook kubernetes.yaml
 ```
+
+### Vars while provisioning kubernetes
+
+- *kubernetes_security_enhancede*: indicates whether to install security extensions. Security extensions are 
+    * PodSecurityPolicy: could be found at $project_dir/kubernetes/roles/master/files/psp.yaml
 
 ### Setup Kubernetes CLI
 
