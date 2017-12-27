@@ -93,9 +93,25 @@
 
 - name: RBAC template
   template:
-    src: rbac.yaml.j2
-    dest: /var/lib/kubernetes/rbac.yaml
+    src: apiserver-kubelet-rbac.yaml.j2
+    dest: /var/lib/kubernetes/apiserver-kubelet-rbac.yaml
   become: true
 
-#- name: Create RBAC kube-api-server-to-kubelet
-#  shell: "kubectl apply -f /var/lib/kubernetes/rbac.yaml"
+- name: Create flannel pod network
+  command: kubectl apply -f /var/lib/kubernetes/apiserver-kubelet-rbac.yaml
+  become: true
+
+
+#####################
+# Netowrking Flannel
+#####################
+
+- name: Template flannel pod network
+  template:
+    src: "flannel.yaml.j2"
+    dest: "/var/lib/kubernetes/flannel.yaml"
+  become: true
+
+- name: Create flannel pod network
+  command: kubectl apply -f /var/lib/kubernetes/flannel.yaml
+  become: true

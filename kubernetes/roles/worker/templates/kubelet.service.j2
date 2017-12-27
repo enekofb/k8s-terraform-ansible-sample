@@ -14,7 +14,7 @@ ExecStart=/usr/bin/kubelet \
   --cluster-dns={{ kubernetes_cluster_dns }} \
   --cluster-domain=cluster.local \
   --container-runtime=docker \
-  --network-plugin=kubenet \
+  --network-plugin=cni \
   --kubeconfig=/var/lib/kubelet/kubeconfig \
   --serialize-image-pulls=false \
   --pod-cidr={{kubernetes_pod_cluster_cidr}} \
@@ -26,6 +26,3 @@ ExecStart=/usr/bin/kubelet \
 
 Restart=on-failure
 RestartSec=5
-
-[Install]
-WantedBy=multi-user.target

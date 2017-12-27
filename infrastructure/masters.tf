@@ -134,6 +134,13 @@ resource "aws_security_group" "master-sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  egress {
+    from_port = 10250
+    to_port = 10250
+    protocol = "tcp"
+    cidr_blocks = ["${var.vpc_cidr}"]
+  }
+
   //TODO add rest of the ports
 
   tags {
