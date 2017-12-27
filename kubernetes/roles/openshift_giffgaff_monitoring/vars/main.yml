@@ -1,0 +1,7 @@
+---
+openshift_master_config_dir: "{{ openshift.common.config_base }}/master"
+openshift_master_config_dir: "{{ openshift.common.config_base }}/master"
+openshift_giffgaff_jenkins_image: "openshift/jenkins-2-centos7:latest"
+openshift_giffgaff_jenkins_data_type: "emptyDir"
+openshift_giffgaff_jenkins_perisistent_volume_claim_name: ""
+jenkins_namespace: "jenkins"

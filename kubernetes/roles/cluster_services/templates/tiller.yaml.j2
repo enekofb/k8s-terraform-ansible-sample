@@ -1,0 +1,90 @@
+kind: List
+apiVersion: v1
+metadata:
+  name: tiller
+items:
+- kind: ServiceAccount
+  apiVersion: v1
+  metadata:
+    name: tiller
+- kind: Role
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: tiller
+  rules:
+  - apiGroups:
+    - ""
+    resources:
+    - configmaps
+    verbs:
+    - create
+    - get
+    - list
+    - update
+    - delete
+  - apiGroups:
+    - ""
+    resources:
+    - namespaces
+    verbs:
+    - get
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: tiller
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: tiller
+  subjects:
+  - kind: ServiceAccount
+    name: tiller
+    namespace: {{helm_namespace}}
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: tiller-cluster-admin
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: cluster-admin
+  subjects:
+  - kind: ServiceAccount
+    name: tiller
+    namespace: {{helm_namespace}}
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    name: tiller
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: helm
+        name: tiller
+    template:
+      metadata:
+        labels:
+          app: helm
+          name: tiller
+      spec:
+        containers:
+        - name: tiller
+          image: gcr.io/kubernetes-helm/tiller:v2.7.0
+          env:
+          - name: TILLER_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          ports:
+          - name: tiller
+            containerPort: 44134
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 44135
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: 44135
+        serviceAccountName: tiller

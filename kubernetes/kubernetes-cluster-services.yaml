@@ -1,0 +1,10 @@
+---
+- hosts: masters[0]
+  become: true
+  vars:
+    helm: "true"
+    ingress: "true"
+    monitoring: "true"
+    logging: "true"
+  roles:
+    - cluster_services

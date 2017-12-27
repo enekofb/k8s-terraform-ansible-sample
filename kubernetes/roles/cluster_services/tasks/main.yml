@@ -1,0 +1,12 @@
+---
+- include_tasks: helm.yml
+  when: helm is defined
+
+- include_tasks: ingress.yml
+  when: ingress is defined
+
+- include_tasks: monitoring.yml
+  when: monitoring is defined
+
+- include_tasks: dns.yml
+  when: dns is defined

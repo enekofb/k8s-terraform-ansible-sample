@@ -1,0 +1,30 @@
+---
+- name: Create temp directory for dns
+  command: mktemp -d /tmp/dns-XXXXXXX
+  register: mktemp
+  changed_when: False
+
+- name: Deploy dns resources
+  copy:
+    dest: "{{ mktemp.stdout }}/{{item}}"
+    src: "{{item}}"
+  with_items:
+  - core-dns-values.yaml
+
+- name: Set dns project
+  command: "kubectl create ns {{ dns_namespaces }}"
+  ignore_errors: true
+
+- name: fetch dns dns
+  command: "helm fetch {{item}}"
+  with_items:
+  - stable/coredns
+
+- name: install dns
+  command: "helm install -f {{ mktemp.stdout }}/core-dns-values.yaml stable/coredns --name gg-dns  --namespace {{dns_namespaces}} --tiller-namespace tiller --wait"
+
+- name: Delete temp directory
+  file:
+    name: "{{ mktemp.stdout }}"
+    state: absent
+  changed_when: False

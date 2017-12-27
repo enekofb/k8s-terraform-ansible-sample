@@ -1,0 +1,39 @@
+---
+- name: Create temp directory for monitoring
+  command: mktemp -d /tmp/openshift-ansible-monitoring-XXXXXXX
+  register: mktemp
+  changed_when: False
+
+- name: Deploy grafana resources
+  copy:
+    dest: "{{ mktemp.stdout }}/{{item}}"
+    src: "{{item}}"
+  with_items:
+  - grafana-values.yaml
+  - prometheus-values.yaml
+
+- name: Set monitoring project
+  command: "kubectl create ns {{ monitoring_namespace }}"
+  ignore_errors: true
+
+- name: fetch grafana grafana
+  command: "helm fetch {{item}}"
+  with_items:
+  - stable/grafana
+  - stable/prometheus
+
+- name: install grafana
+  command: "helm install -f {{ mktemp.stdout }}/grafana-values.yaml stable/grafana --name gg-grafana --namespace monitoring --tiller-namespace tiller --wait"
+  ignore_errors: true
+
+- name: install prometheus
+  command: "helm install -f {{ mktemp.stdout }}/prometheus-values.yaml stable/prometheus --name gg-prometheus --namespace monitoring --tiller-namespace tiller --wait"
+  ignore_errors: true
+
+- name: Delete temp directory
+  file:
+    name: "{{ mktemp.stdout }}"
+    state: absent
+  changed_when: False
+
+

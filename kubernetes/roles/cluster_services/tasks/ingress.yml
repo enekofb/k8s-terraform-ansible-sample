@@ -1,0 +1,30 @@
+---
+- name: Create temp directory for ingress-controller
+  command: mktemp -d /tmp/openshift-ansible-ingress-controller-XXXXXXX
+  register: mktemp
+  changed_when: False
+
+- name: Deploy ingress-controller resources
+  copy:
+    dest: "{{ mktemp.stdout }}/{{item}}"
+    src: "{{item}}"
+  with_items:
+  - ingress-controller-values.yaml
+
+- name: Set ingress-controller project
+  command: "kubectl create ns {{ ingress_controller_namespace }}"
+  ignore_errors: true
+
+- name: fetch ingress-controller ingress-controller
+  command: "helm fetch {{item}}"
+  with_items:
+  - stable/nginx-ingress
+
+- name: install ingress-controller
+  command: "helm install -f {{ mktemp.stdout }}/ingress-controller-values.yaml stable/nginx-ingress --name gg-ingress-controller  --namespace {{ingress_controller_namespace}} --tiller-namespace tiller --wait"
+
+- name: Delete temp directory
+  file:
+    name: "{{ mktemp.stdout }}"
+    state: absent
+  changed_when: False

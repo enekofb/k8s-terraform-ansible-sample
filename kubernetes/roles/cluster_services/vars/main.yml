@@ -1,0 +1,9 @@
+---
+
+helm_namespace: "tiller"
+
+monitoring_namespace: "monitoring"
+
+ingress_controller_namespace: "kube-system"
+
+dns_namespace: "kube-system"

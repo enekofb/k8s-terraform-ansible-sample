@@ -1,0 +1,39 @@
+---
+- name: Create temp directory for helm
+  command: mktemp -d /tmp/openshift-ansible-helm-XXXXXXX
+  register: mktemp
+  changed_when: False
+
+- name: Deploy helm resources
+  template:
+    dest: "{{ mktemp.stdout }}/tiller.yaml"
+    src: "tiller.yaml.j2"
+
+- name: Set tiller project
+  command: "kubectl create ns {{ helm_namespace }}"
+  ignore_errors: true
+
+- name: download helm
+  command: bash -c "curl -s https://storage.googleapis.com/kubernetes-helm/helm-v2.7.0-linux-amd64.tar.gz | tar xz -C {{ mktemp.stdout }}"
+
+- name: mv helm to path
+  command: "mv {{ mktemp.stdout }}/linux-amd64/helm /usr/bin"
+
+- name: helm init
+  command: "helm init --tiller-namespace {{helm_namespace}} --client-only"
+
+- name: Create tiller server
+  command: "kubectl create -f {{ mktemp.stdout }}/tiller.yaml -n {{ helm_namespace }}"
+
+- name: wait until helm deployed
+  command: "kubectl -n {{ helm_namespace }} rollout status deployment/tiller"
+  register: deployment_tiller
+  until: deployment_tiller.rc == 0
+  retries: 3
+  delay: 1
+
+- name: Delete temp directory
+  file:
+    name: "{{ mktemp.stdout }}"
+    state: absent
+  changed_when: False
