@@ -85,12 +85,19 @@
     # TODO Add hash check
   become: true
 
+- name: Create CNI directory
+  file:
+    path: /opt/cni/bin/
+    state: directory
+    mode: 0755
+    recurse: true
+  become: true
+
 - name: Unpack CNI binaries
   unarchive:
     copy: no
     src: "/usr/local/src/{{ cni_package_file }}"
-    dest: "/opt/cni/"
-    creates: "/opt/cni/bin/cnitool"
+    dest: "/opt/cni/bin/"
   become: true
 
 - name: Create Kubelet directory

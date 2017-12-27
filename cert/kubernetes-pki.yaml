@@ -12,7 +12,7 @@
   vars:
     kubernetes_api_endpoint_port: 6443
     kubernetes_cluster_name: "kubernetes-not-the-hardest-way"
-    certificate_path: "/home/eneko/projects/enekofb/k8s-terraform-ansible-sample/cert"
+    certificate_path: "/Users/eneko/projects/enekofb/k8s-terraform-ansible-sample/cert"
 
   tasks:
 

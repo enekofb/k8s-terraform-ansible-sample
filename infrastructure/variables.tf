@@ -51,11 +51,6 @@ variable subnet_private_cidr {
 }
 
 
-variable kubernetes_pod_cidr {
-  default = "10.200.0.0/16"
-}
-
-
 variable route53_zone_id {
   default = "10.200.0.0/16"
 }

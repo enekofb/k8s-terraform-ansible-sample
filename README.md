@@ -169,7 +169,7 @@ In particular, the following ClusterRoles and ClusterRoleBindings applies in the
 that api-server does to any kubelet.
 
 ```
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   annotations:
@@ -192,7 +192,7 @@ rules:
 that is binded to api-server (kubernetes user) by the following ClusterRoleBinding
       
 ```
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: system:kube-apiserver
