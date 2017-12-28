@@ -22,6 +22,8 @@ resource "aws_instance" "etcd" {
       ansibleFilter = "${var.ansibleFilter}"
       ansibleNodeType = "etcd"
       ansibleNodeName = "etcd${count.index}"
+      "kubernetes.io/cluster/khw" = "khw"
+
     }
 
 
@@ -91,6 +93,7 @@ resource "aws_security_group" "etcd-sg" {
   tags {
     Owner = "${var.owner}"
     Name = "etcd-sg"
+    "kubernetes.io/cluster/khw" = "khw"
   }
 }
 

@@ -9,6 +9,7 @@ ExecStart=/usr/bin/kubelet \
   --allow-privileged=true \
   --anonymous-auth=false \
   --authorization-mode=Webhook \
+  --cloud-provider=aws \
   --client-ca-file=/var/lib/kubernetes/ca.pem \
   --cluster-dns={{ kubernetes_cluster_dns }} \
   --cluster-domain=cluster.local \

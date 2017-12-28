@@ -23,6 +23,7 @@ resource "aws_instance" "worker" {
       ansibleFilter = "${var.ansibleFilter}"
       ansibleNodeType = "worker"
       ansibleNodeName = "worker${count.index}"
+      "kubernetes.io/cluster/khw" = "khw"
     }
 
     lifecycle {
@@ -88,5 +89,7 @@ resource "aws_security_group" "worker-sg" {
   tags {
     Owner = "${var.owner}"
     Name = "worker-sg"
+    "kubernetes.io/cluster/khw" = "khw"
+
   }
 }

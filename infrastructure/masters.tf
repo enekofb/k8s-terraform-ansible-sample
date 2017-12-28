@@ -24,7 +24,8 @@ resource "aws_instance" "master" {
         ansibleFilter = "${var.ansibleFilter}"
         ansibleNodeType = "master"
         ansibleNodeName = "master${count.index}"
-      }
+        "kubernetes.io/cluster/khw" = "khw"
+    }
 
     lifecycle {
       ignore_changes = ["user_data"]
@@ -62,6 +63,8 @@ resource "aws_elb" "master-elb" {
     tags {
       Name = "master-elb"
       Owner = "${var.owner}"
+      "kubernetes.io/cluster/khw" = "khw"
+
     }
 }
 
@@ -83,6 +86,13 @@ resource "aws_security_group" "master-elb-sg" {
     to_port = 6443
     protocol = "TCP"
     cidr_blocks = ["${var.subnet_private_cidr}"]
+  }
+
+
+  tags {
+    Owner = "${var.owner}"
+    Name = "master-elb-sg"
+    "kubernetes.io/cluster/khw" = "khw"
   }
 
 }
@@ -139,5 +149,6 @@ resource "aws_security_group" "master-sg" {
   tags {
     Owner = "${var.owner}"
     Name = "master-sg"
+    "kubernetes.io/cluster/khw" = "khw"
   }
 }

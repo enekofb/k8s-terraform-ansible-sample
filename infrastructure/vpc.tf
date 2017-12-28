@@ -42,6 +42,7 @@ resource "aws_subnet" "public" {
   tags {
     Name = "kubernetes-public"
     Owner = "${var.owner}"
+    "kubernetes.io/cluster/khw" = "khw"
   }
 }
 
@@ -99,6 +100,8 @@ resource "aws_route_table" "public" {
     tags {
       Name = "kubernetes"
       Owner = "${var.owner}"
+      "kubernetes.io/cluster/khw" = "khw"
+
     }
 }
 
@@ -203,6 +206,8 @@ resource "aws_security_group" "bastion-sg" {
   tags {
     Owner = "${var.owner}"
     Name = "bastion-sg"
+    "kubernetes.io/cluster/khw" = "khw"
+
   }
 }
 
