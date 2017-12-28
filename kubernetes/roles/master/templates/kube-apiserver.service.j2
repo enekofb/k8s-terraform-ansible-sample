@@ -14,6 +14,7 @@ ExecStart=/usr/bin/kube-apiserver \
   --audit-log-path=/var/lib/audit.log \
   --authorization-mode=Node,RBAC \
   --bind-address=0.0.0.0 \
+  --cloud-provider=aws \
   --client-ca-file=/var/lib/kubernetes/ca.pem \
   --enable-swagger-ui=true \
   --etcd-cafile=/var/lib/kubernetes/ca.pem \

@@ -6,6 +6,7 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 ExecStart=/usr/bin/kube-controller-manager \
   --address=0.0.0.0 \
   --allocate-node-cidrs=true \
+  --cloud-provider=aws \
   --cluster-cidr={{ kubernetes_pod_cluster_cidr }} \
   --cluster-name=kubernetes \
   --cluster-signing-cert-file=/var/lib/kubernetes/ca.pem \
