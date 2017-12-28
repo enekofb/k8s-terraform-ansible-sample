@@ -12,7 +12,7 @@
   - core-dns-values.yaml
 
 - name: Set dns project
-  command: "kubectl create ns {{ dns_namespaces }}"
+  command: "kubectl create ns {{ dns_namespace }}"
   ignore_errors: true
 
 - name: fetch dns dns
@@ -21,7 +21,7 @@
   - stable/coredns
 
 - name: install dns
-  command: "helm install -f {{ mktemp.stdout }}/core-dns-values.yaml stable/coredns --name gg-dns  --namespace {{dns_namespaces}} --tiller-namespace tiller --wait"
+  command: "helm install -f {{ mktemp.stdout }}/core-dns-values.yaml stable/coredns --name gg-dns  --namespace {{dns_namespace}} --tiller-namespace tiller --wait"
 
 - name: Delete temp directory
   file:

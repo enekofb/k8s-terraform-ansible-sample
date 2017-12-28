@@ -214,3 +214,7 @@ resource "aws_security_group" "bastion-sg" {
 output "kubernetes_bastion_public_ip" {
   value = "${aws_eip.bastion-eip.public_ip}"
 }
+
+output "kubernetes_elb_master" {
+  value = "${aws_elb.master-elb.dns_name}"
+}

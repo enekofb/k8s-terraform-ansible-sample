@@ -19,7 +19,7 @@ resources:
 
 rbac:
   # If true, create & use RBAC resources
-  create: false
+  create: true
   # Ignored if rbac.create is true
   serviceAccountName: default
 
@@ -33,14 +33,14 @@ serviceType: "ClusterIP"
 # Can be one of three options: "UDPNTCP" (default), "UDP" or "TCP"
 serviceProtocol: "UDPNTCP"
 
-# plugn configuration of CoreDNS refer to https://github.com/coredns/coredns/tree/master/plugin
+# plugin configuration of CoreDNS refer to https://github.com/coredns/coredns/tree/master/plugin
 # for all specific details. set enabled to true/false to enable/disable a plugin.
 plugins:
   kubernetes:
     enabled: true
-    clusterCidr: "10.3.0.0/24"
+    clusterCidr: "10.32.0.0/24"
     clusterDomain: "cluster.local"
-    clusterIP:
+    clusterIP: "10.32.0.10"
   prometheus:
     enabled: true
     port: "9153"

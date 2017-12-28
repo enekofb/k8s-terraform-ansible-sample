@@ -10,13 +10,11 @@
   connection: local
 
   vars:
+    kubernetes_api_endpoint: 10.0.20.20
     kubernetes_api_endpoint_port: 6443
-    kubernetes_cluster_name: "kubernetes-not-the-hardest-way"
+    kubernetes_cluster_name: "khw"
     certificate_path: "{{ playbook_dir }}/../cert"
-
-    kubectl_user: admin
-    kubectl_token: chAng3m3
-
+    kubectl_user: "admin"
 
   tasks:
 
@@ -32,10 +30,13 @@
     shell: "kubectl config set-cluster {{ kubernetes_cluster_name }} --certificate-authority={{ certificate_path }}/ca.pem --embed-certs=true --server=https://{{ kubernetes_api_endpoint }}:{{ kubernetes_api_endpoint_port }}"
 
   - name: Set kubectl credentials
-    shell: "kubectl config set-credentials {{ kubectl_user }} --token {{ kubectl_token }}"
+    shell: "kubectl config set-credentials {{kubectl_user}} \
+            --client-certificate={{ certificate_path }}/admin.pem \
+            --client-key={{ certificate_path }}/admin-key.pem \
+            --embed-certs=true"
 
   - name: Set kubectl default context
-    shell: "kubectl config set-context default-context --cluster={{ kubernetes_cluster_name }} --user={{ kubectl_user }}"
+    shell: "kubectl config set-context khw --cluster={{ kubernetes_cluster_name }} --user={{ kubectl_user }}"
 
   - name: Switch kubectl to default context
-    shell: "kubectl config use-context default-context"
+    shell: "kubectl config use-context khw"

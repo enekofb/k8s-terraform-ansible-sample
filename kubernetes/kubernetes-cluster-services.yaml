@@ -6,5 +6,6 @@
     ingress: "true"
     monitoring: "true"
     logging: "true"
+    dns: "true"
   roles:
     - cluster_services
